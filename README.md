@@ -139,3 +139,44 @@ The **Smart College Doubt Solving Platform** integrates an intelligent ML layer 
 ## 📜 License
 
 This project is developed by team **Gradient Descenders** for the final probation task evaluation.
+
+## Expected file structure
+
+smart-college-doubt-platform/
+│
+├── frontend/                   # 💻 Frontend UI (React / Next.js)
+│   ├── public/                 # Static assets (images, icons)
+│   ├── src/
+│   │   ├── components/         # Reusable UI parts (Navbar, QuestionCard, SimilarityPopup)
+│   │   ├── pages/              # Main views (Home, AskDoubt, Profile, QuestionDetail)
+│   │   ├── services/           # API calls to the Backend
+│   │   ├── styles/             # CSS / Tailwind files
+│   │   └── App.js              # Main React application entry
+│   ├── package.json            # Frontend dependencies
+│   └── .env                    # Frontend environment variables
+│
+├── backend/                    # ⚙️ Main Application Backend (Node.js / Express)
+│   ├── src/
+│   │   ├── controllers/        # Business logic (UserCtrl, QuestionCtrl, AnswerCtrl)
+│   │   ├── models/             # Database schemas (User, Question, Answer)
+│   │   ├── routes/             # API endpoints (/api/auth, /api/questions)
+│   │   ├── middleware/         # Auth guards (JWT verification)
+│   │   └── server.js           # Main backend entry point
+│   ├── package.json            # Backend dependencies
+│   └── .env                    # DB connection strings & JWT secrets
+│
+├── ml_service/                 # 🤖 Machine Learning Microservice (Python / FastAPI or Flask)
+│   ├── api/
+│   │   └── app.py              # ML API endpoints (/predict-domain, /check-similarity)
+│   ├── models/
+│   │   ├── similarity_model.pkl   # Your exported similarity model
+│   │   └── classifier_model.pkl   # Your exported domain classification model
+│   ├── training/
+│   │   ├── train_similarity.py    # Script used to train the similarity model
+│   │   └── train_classifier.py    # Script used to train the classification model
+│   ├── data/
+│   │   └── raw_questions.csv      # Dataset used for training (add to .gitignore)
+│   └── requirements.txt        # Python dependencies (scikit-learn, pandas, flask)
+│
+├── .gitignore                  # Ignore node_modules, .env, and large datasets
+└── README.md                   # The project overview documentation
