@@ -4,10 +4,10 @@ import joblib
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from training.Clustering import retrain
+
 
 app = FastAPI()
-
-
 
 model = joblib.load('model/domain_classifier.joblib')
 vectoriser = joblib.load('model/domain_classifier_vectorizer.joblib')
@@ -22,8 +22,18 @@ def read_root():
     return {"message": "Welcome to the Query Classification API. Use the /predict endpoint to classify your query."}
 
 
+# data_path = "./ml_service/data/Clustering_data.csv"
+@app.post("/recommend")
+def recommend_querry(data: User_input):
+    result = retrain(new_querry=data.Query)
+    return JSONResponse(
+        status_code=200,
+        content={"recommendations": result},
+    )
+
+
 @app.post("/predict")
-def predict_news(data: User_input):
+def predict_querry(data: User_input):
     input_data = [data.Query]
     input_data = [text.lower() for text in input_data]
     input_vector = vectoriser.transform(input_data).toarray()

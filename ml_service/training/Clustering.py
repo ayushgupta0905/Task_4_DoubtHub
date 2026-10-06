@@ -5,13 +5,21 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import pairwise_distances
 import json
 
+def text_preprocessing(text):
+    text = text.lower()
+    exclude = '!"#$%&\'()*,-./:;<=>?@[\\]^_`{|}~'
+    for char in exclude:
+            text = text.replace(char,'')
+    return text
 
-
-def retrain(data_path="../data/Clustering_data.csv", new_querry=""):
+def retrain(new_querry=""):
     
-    df = pd.read_csv(r"C:\Users\kumar\OneDrive\Desktop\New folder\task_4_DoubtHub\ml_service\data\Clustering_data.csv")
+    df = pd.read_csv(r"C:\Users\kumar\OneDrive\Desktop\task_4_DoubtHub\ml_service\data\Clustering_data.csv")
     # df = pd.read_csv(data_path)              
     df["mixed"] = df["query"]+" "+df['label']+" "+df['topic']
+
+    # preprocess the new query
+    new_querry = text_preprocessing(new_querry)
 
     # Vectorize the text data
     vectorizer = TfidfVectorizer()
@@ -42,8 +50,8 @@ def retrain(data_path="../data/Clustering_data.csv", new_querry=""):
     for q in nearest_queries:
         result[i] = q
         i += 1
-    print(result)
+    # print(result)
     return json.dumps({"similar_queries": result})
 
 
-retrain(new_querry="What is react")
+# retrain(new_querry="What is react")
