@@ -142,6 +142,9 @@ This project is developed by team **Gradient Descenders** for the final probatio
 
 ## Expected file structure
 
+## Expected File Structure
+
+```text
 smart-college-doubt-platform/
 │
 ├── frontend/                   # 💻 Frontend UI (React / Next.js)
@@ -180,3 +183,4 @@ smart-college-doubt-platform/
 │
 ├── .gitignore                  # Ignore node_modules, .env, and large datasets
 └── README.md                   # The project overview documentation
+```
