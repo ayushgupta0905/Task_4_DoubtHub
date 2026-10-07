@@ -1,7 +1,70 @@
 
+import { useState } from "react";
 import yellowBackground from "../assets/yellowbackground.png";
+import { loginUser } from "../api/api";
 
 function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [domain, setDomain] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    setError("");
+
+    if (!email || !password || !domain) {
+      setError("Please fill all the fields.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const data = await loginUser(email, password, domain);
+
+      console.log("Login successful:", data);
+
+      // Save access token
+      if (data.access) {
+        localStorage.setItem("access_token", data.access);
+      }
+
+      // Save refresh token
+      if (data.refresh) {
+        localStorage.setItem("refresh_token", data.refresh);
+      }
+
+      // If backend returns a normal token
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
+      // Save user information
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      // Save selected domain
+      localStorage.setItem("domain", domain);
+
+      // Login successful
+      window.location.href = "/";
+
+    } catch (err) {
+      console.error("Login error:", err);
+
+      setError(
+        err.message || "Something went wrong. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       className="login-page"
@@ -37,8 +100,6 @@ function Login() {
             <div>✓ Connect with college students</div>
             <div>✓ Improve your technical skills</div>
           </div>
-
-          
         </div>
       </div>
 
@@ -54,7 +115,7 @@ function Login() {
             Welcome back! Continue your learning journey.
           </p>
 
-          <form>
+          <form onSubmit={handleLogin}>
 
             {/* Email */}
             <div className="input-group">
@@ -66,6 +127,8 @@ function Login() {
                 <input
                   type="email"
                   placeholder="Enter your college email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </div>
@@ -80,6 +143,8 @@ function Login() {
                 <input
                   type="password"
                   placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
 
                 <span className="password-icon">
@@ -95,7 +160,10 @@ function Login() {
               <div className="input-wrapper">
                 <span>▱</span>
 
-                <select defaultValue="">
+                <select
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                >
                   <option value="" disabled>
                     Choose your domain
                   </option>
@@ -133,6 +201,19 @@ function Login() {
               </div>
             </div>
 
+            {/* Error */}
+            {error && (
+              <p
+                style={{
+                  color: "#e53935",
+                  fontSize: "14px",
+                  marginTop: "8px",
+                }}
+              >
+                {error}
+              </p>
+            )}
+
             {/* Options */}
             <div className="login-options">
               <label className="remember">
@@ -149,8 +230,9 @@ function Login() {
             <button
               type="submit"
               className="login-main-btn"
+              disabled={loading}
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </button>
 
           </form>

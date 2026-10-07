@@ -1102,14 +1102,7 @@ button {
 /* =========================
    STUDENT IMAGE
 ========================= */
-/* .login-page-student-image {
-  width: 100%;
-  margin-top: 20px;
 
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-end;
-} */
 .signup-student-image {
   width: 100%;
   margin-top: 20px;
@@ -1119,12 +1112,7 @@ button {
   align-items: flex-end;
 }
 
-/* .login-page-student-image img {
-  width: 320px;
-  max-width: 85%;
-  height: auto;
-  display: block;
-} */
+
 .signup-student-image img {
   width: 320px;
   max-width: 85%;

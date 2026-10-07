@@ -24,15 +24,15 @@ function App() {
 
         <Route path="/signup" element={<Signup />} />
 
-        <Route path="/questions" element={<Questions />} />
+        <Route path="/question" element={<Questions />} />
 
         <Route
-          path="/question-detail"
+          path="/questiondetail"
           element={<QuestionDetail />}
         />
 
         <Route
-          path="/ask-question"
+          path="/askquestion"
           element={<AskQuestion />}
         />
 
@@ -47,12 +47,12 @@ function App() {
         />
 
         <Route
-          path="/my-answers"
+          path="/myanswer"
           element={<MyAnswers />}
         />
 
         <Route
-          path="/search-results"
+          path="/searchresults"
           element={<SearchResults />}
         />
 

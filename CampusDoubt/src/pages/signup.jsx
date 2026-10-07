@@ -1,6 +1,98 @@
+import { useState } from "react";
 import studentPhoto from "../assets/studentphoto.png";
+import { signupUser } from "../api/api";
 
 function Signup() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    college: "",
+    branch: "",
+    password: "",
+    confirmPassword: "",
+    year: "",
+    graduationYear: "",
+    domain: "",
+  });
+
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+
+    setError("");
+    setSuccess("");
+
+    // Check all fields
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.college ||
+      !formData.branch ||
+      !formData.password ||
+      !formData.confirmPassword ||
+      !formData.year ||
+      !formData.graduationYear ||
+      !formData.domain
+    ) {
+      setError("Please fill all the fields.");
+      return;
+    }
+
+    // Check password
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    // Check terms
+    if (!agreeTerms) {
+      setError(
+        "Please agree to the Terms of Service and Privacy Policy."
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      console.log("Sending signup data:", formData);
+
+      const data = await signupUser(formData);
+
+      console.log("Signup successful:", data);
+
+      setSuccess(
+        "Account created successfully! Redirecting to login..."
+      );
+
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1500);
+
+    } catch (err) {
+      console.error("Signup error:", err);
+
+      setError(
+        err.message || "Signup failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="signup-page">
 
@@ -62,7 +154,7 @@ function Signup() {
           </p>
 
 
-          <form>
+          <form onSubmit={handleSignup}>
 
             {/* Full Name */}
             <div className="signup-input-group">
@@ -73,7 +165,10 @@ function Signup() {
 
                 <input
                   type="text"
+                  name="name"
                   placeholder="Enter your full name"
+                  value={formData.name}
+                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -88,7 +183,10 @@ function Signup() {
 
                 <input
                   type="email"
+                  name="email"
                   placeholder="Enter your college email"
+                  value={formData.email}
+                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -103,7 +201,10 @@ function Signup() {
 
                 <input
                   type="text"
+                  name="college"
                   placeholder="Enter your college name"
+                  value={formData.college}
+                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -116,7 +217,11 @@ function Signup() {
               <div className="signup-input">
                 <span>▦</span>
 
-                <select defaultValue="">
+                <select
+                  name="branch"
+                  value={formData.branch}
+                  onChange={handleChange}
+                >
                   <option value="" disabled>
                     Select your branch
                   </option>
@@ -166,7 +271,10 @@ function Signup() {
 
                 <input
                   type="password"
+                  name="password"
                   placeholder="Create a password"
+                  value={formData.password}
+                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -181,7 +289,10 @@ function Signup() {
 
                 <input
                   type="password"
+                  name="confirmPassword"
                   placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -194,7 +305,11 @@ function Signup() {
               <div className="signup-input">
                 <span>📚</span>
 
-                <select defaultValue="">
+                <select
+                  name="year"
+                  value={formData.year}
+                  onChange={handleChange}
+                >
                   <option value="" disabled>
                     Select your year
                   </option>
@@ -215,7 +330,11 @@ function Signup() {
               <div className="signup-input">
                 <span>📅</span>
 
-                <select defaultValue="">
+                <select
+                  name="graduationYear"
+                  value={formData.graduationYear}
+                  onChange={handleChange}
+                >
                   <option value="" disabled>
                     Select graduation year
                   </option>
@@ -231,10 +350,94 @@ function Signup() {
             </div>
 
 
+            {/* Domain */}
+            <div className="signup-input-group">
+              <label>Select Your Domain</label>
+
+              <div className="signup-input">
+                <span>▱</span>
+
+                <select
+                  name="domain"
+                  value={formData.domain}
+                  onChange={handleChange}
+                >
+                  <option value="" disabled>
+                    Choose your domain
+                  </option>
+
+                  <option value="ai-ml">
+                    AI / ML
+                  </option>
+
+                  <option value="dsa">
+                    DSA
+                  </option>
+
+                  <option value="python">
+                    Python
+                  </option>
+
+                  <option value="frontend">
+                    Frontend
+                  </option>
+
+                  <option value="backend">
+                    Backend
+                  </option>
+
+                  <option value="cyber-security">
+                    Cyber Security
+                  </option>
+
+                  <option value="machine-learning">
+                    Machine Learning
+                  </option>
+                </select>
+
+                <span>⌄</span>
+              </div>
+            </div>
+
+
+            {/* Error */}
+            {error && (
+              <p
+                style={{
+                  color: "#e53935",
+                  fontSize: "14px",
+                  marginTop: "8px",
+                }}
+              >
+                {error}
+              </p>
+            )}
+
+
+            {/* Success */}
+            {success && (
+              <p
+                style={{
+                  color: "#2e7d32",
+                  fontSize: "14px",
+                  marginTop: "8px",
+                }}
+              >
+                {success}
+              </p>
+            )}
+
+
             {/* Terms */}
             <div className="signup-terms">
               <label>
-                <input type="checkbox" />
+                <input
+                  type="checkbox"
+                  checked={agreeTerms}
+                  onChange={(e) =>
+                    setAgreeTerms(e.target.checked)
+                  }
+                />
 
                 <span>
                   I agree to{" "}
@@ -250,8 +453,11 @@ function Signup() {
             <button
               type="submit"
               className="signup-button"
+              disabled={loading}
             >
-              Create Account
+              {loading
+                ? "Creating Account..."
+                : "Create Account"}
             </button>
 
           </form>
