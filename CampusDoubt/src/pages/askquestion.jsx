@@ -4,34 +4,19 @@ import girlWithBook from "../assets/girlwithbook.png";
 function AskQuestion() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [tags, setTags] = useState("");
-  const [category, setCategory] = useState("");
-
-  const popularTags = [
-    "React",
-    "Node.js",
-    "Python",
-    "Java",
-    "C++",
-    "Database",
-    "HTML",
-    "CSS",
-  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (
       !title.trim() ||
-      !description.trim() ||
-      !tags.trim() ||
-      !category
+      !description.trim()
     ) {
       alert("Please fill all required fields.");
       return;
     }
 
-    alert("Question posted successfully!");
+    alert("Question posted successfully! Tags and category will be auto-assigned.");
   };
 
   return (
@@ -280,131 +265,6 @@ function AskQuestion() {
 
               </div>
 
-
-              {/* Tags */}
-              <div className="ask-question-field">
-
-                <div className="ask-question-label-row">
-
-                  <label>
-                    Tags <span>*</span>
-                  </label>
-
-                  <small>
-                    {tags
-                      ? tags
-                          .split(",")
-                          .map((item) => item.trim())
-                          .filter(Boolean).length
-                      : 0}
-                    /5
-                  </small>
-
-                </div>
-
-
-                <input
-                  type="text"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  placeholder="Add tags (e.g. React, Node.js, Python)"
-                />
-
-                <p className="field-help">
-                  Add up to 5 relevant tags to help others find your question.
-                </p>
-
-
-                <div className="popular-tags">
-
-                  <span>
-                    Popular tags:
-                  </span>
-
-                  {popularTags.map((tag) => (
-
-                    <button
-                      type="button"
-                      key={tag}
-                      onClick={() => {
-
-                        const currentTags = tags
-                          .split(",")
-                          .map((item) => item.trim())
-                          .filter(Boolean);
-
-                        if (
-                          currentTags.length < 5 &&
-                          !currentTags.includes(tag)
-                        ) {
-                          setTags(
-                            [...currentTags, tag].join(", ")
-                          );
-                        }
-
-                      }}
-                    >
-                      {tag}
-                    </button>
-
-                  ))}
-
-                </div>
-
-              </div>
-
-
-              {/* Category */}
-              <div className="ask-question-field">
-
-                <label>
-                  Category <span>*</span>
-                </label>
-
-                <select
-                  value={category}
-                  onChange={(e) =>
-                    setCategory(e.target.value)
-                  }
-                >
-
-                  <option value="">
-                    Select a category
-                  </option>
-
-                  <option value="AI/ML">
-                    AI / ML
-                  </option>
-
-                  <option value="DSA">
-                    DSA
-                  </option>
-
-                  <option value="Python">
-                    Python
-                  </option>
-
-                  <option value="Frontend">
-                    Frontend
-                  </option>
-
-                  <option value="Backend">
-                    Backend
-                  </option>
-
-                  <option value="Cyber Security">
-                    Cyber Security
-                  </option>
-
-                  <option value="Database">
-                    Database
-                  </option>
-
-                </select>
-
-              </div>
-
-
               {/* Bottom Actions */}
               <div className="ask-question-actions">
 
@@ -469,9 +329,6 @@ function AskQuestion() {
                 Specify the expected output
               </li>
 
-              <li>
-                Use relevant tags
-              </li>
 
               <li>
                 Be respectful and follow community guidelines
