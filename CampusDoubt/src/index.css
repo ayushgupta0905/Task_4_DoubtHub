@@ -728,7 +728,8 @@ button {
   background-color: #fffdf5;
   background-size: cover;
   background-position: center;
-  overflow: hidden;
+  overflow-x: hidden;
+  position: relative;
 }
 
 /* =========================
@@ -737,10 +738,11 @@ button {
 
 .login-left {
   min-height: 100vh;
-  padding: 45px 70px;
+  padding: 40px 60px;
   display: flex;
   flex-direction: column;
   position: relative;
+  z-index: 1;
 }
 
 .login-brand {
@@ -754,9 +756,9 @@ button {
 }
 
 .login-content {
-  max-width: 560px;
+  max-width: 540px;
   margin: auto 0;
-  padding-bottom: 50px;
+  padding-bottom: 25px;
 }
 
 .login-small-title {
@@ -787,7 +789,7 @@ button {
 }
 
 .login-points {
-  margin-top: 28px;
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -800,6 +802,41 @@ button {
 }
 
 /* =========================
+   LOGIN STUDENT IMAGE
+========================= */
+
+.login-student-image,
+.student-image {
+  width: 100%;
+  max-width: 440px;
+  margin-top: 22px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.login-student-image img,
+.student-image img {
+  width: 100%;
+  max-width: 410px;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  opacity: 0.88;
+  filter: drop-shadow(0 10px 24px rgba(230, 169, 0, 0.12));
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.login-student-image:hover img,
+.student-image:hover img {
+  opacity: 0.98;
+  transform: translateY(-2px);
+}
+
+/* =========================
    RIGHT SIDE
 ========================= */
 
@@ -809,17 +846,23 @@ button {
   align-items: center;
   justify-content: center;
   padding: 40px;
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 5;
 }
 
 .login-box {
   width: 100%;
-  max-width: 600px;
+  max-width: 580px;
   background: #ffffff;
-  padding: 48px 60px;
+  padding: 44px 54px;
   border-radius: 22px;
-  border: 1px solid #eeeeee;
-  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.08), 0 4px 15px rgba(230, 169, 0, 0.04);
+  position: relative;
+  z-index: 10;
 }
 
 .login-box h2 {
@@ -984,6 +1027,120 @@ button {
   color: #68727e;
   font-size: 14px;
   margin: 0;
+}
+
+/* =========================
+   RESPONSIVE LOGIN
+========================= */
+
+@media (max-width: 1100px) {
+  .login-left {
+    padding: 35px 40px;
+  }
+
+  .login-content h1 {
+    font-size: 46px;
+  }
+
+  .login-student-image,
+  .student-image {
+    max-width: 380px;
+    margin-top: 18px;
+  }
+
+  .login-student-image img,
+  .student-image img {
+    max-width: 360px;
+  }
+
+  .login-box {
+    padding: 38px 40px;
+  }
+}
+
+@media (max-width: 900px) {
+  .login-page {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    overflow-y: auto;
+  }
+
+  .login-left {
+    min-height: auto;
+    padding: 40px 25px 25px;
+    align-items: center;
+  }
+
+  .login-brand {
+    align-self: flex-start;
+  }
+
+  .login-content {
+    margin: 20px auto 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .login-points {
+    align-items: flex-start;
+    display: inline-flex;
+    margin: 20px auto 0;
+  }
+
+  .login-student-image,
+  .student-image {
+    justify-content: center;
+    max-width: 320px;
+    margin: 20px auto 0;
+  }
+
+  .login-student-image img,
+  .student-image img {
+    max-width: 300px;
+  }
+
+  .login-right {
+    min-height: auto;
+    padding: 20px 20px 50px;
+    background: transparent;
+  }
+
+  .login-box {
+    max-width: 520px;
+    padding: 36px 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-content h1 {
+    font-size: 34px;
+    letter-spacing: -1px;
+  }
+
+  .login-description {
+    font-size: 15px;
+  }
+
+  .login-box {
+    padding: 28px 20px;
+    border-radius: 18px;
+  }
+
+  .login-box h2 {
+    font-size: 28px;
+  }
+
+  .login-student-image,
+  .student-image {
+    max-width: 260px;
+  }
+
+  .login-student-image img,
+  .student-image img {
+    max-width: 250px;
+  }
 }
 
 
@@ -8941,7 +9098,7 @@ margin-right: 20px;
       rgba(255, 255, 255, 0.9),
       rgba(255, 255, 255, 0.93)
     ),
-    url("../assets/yellowbackground.png");
+    url("./assets/yellowbackground.png");
 
   background-size: cover;
   background-position: center;

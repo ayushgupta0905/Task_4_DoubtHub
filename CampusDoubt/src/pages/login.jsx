@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import yellowBackground from "../assets/yellowbackground.png";
+import studentPhoto from "../assets/studentphoto.png";
 import { loginUser } from "../api/api";
 
 function Login() {
@@ -99,6 +100,14 @@ function Login() {
             <div>✓ Ask and solve technical doubts</div>
             <div>✓ Connect with college students</div>
             <div>✓ Improve your technical skills</div>
+          </div>
+
+          {/* Student Photo */}
+          <div className="login-student-image">
+            <img
+              src={studentPhoto}
+              alt="Students learning together"
+            />
           </div>
         </div>
       </div>
@@ -247,7 +256,7 @@ function Login() {
           {/* Signup */}
           <p className="signup-text">
             Don't have an account?
-            <a href="#"> Sign Up</a>
+            <a href="/signup"> Sign Up</a>
           </p>
 
         </div>
