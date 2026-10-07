@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 from sklearn.metrics import pairwise_distances
@@ -13,8 +14,11 @@ def text_preprocessing(text):
     return text
 
 def retrain(new_querry=""):
-    
-    df = pd.read_csv(r"C:\Users\kumar\OneDrive\Desktop\task_4_DoubtHub\ml_service\data\Clustering_data.csv")
+
+    base_dir = os.path.dirname(__file__)
+    file_path = os.path.join(base_dir, 'Clustering_data.csv')
+    df = pd.read_csv(file_path)
+    # df = pd.read_csv('training/Clustering_data.csv.csv')
     # df = pd.read_csv(data_path)              
     df["mixed"] = df["query"]+" "+df['label']+" "+df['topic']
 
