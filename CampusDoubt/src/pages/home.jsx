@@ -1,7 +1,23 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import heroImage from "../assets/studentphoto.png";
 import yellowBackground from "../assets/yellowbackground.png";
 
 function Home() {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/searchresults?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleTagSearch = (tag) => {
+    navigate(`/searchresults?q=${encodeURIComponent(tag)}`);
+  };
+
   return (
     <div
       className="home"
@@ -9,21 +25,21 @@ function Home() {
     >
       {/* Navbar */}
       <nav className="navbar">
-        <div className="logo">
+        <div className="logo" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
           🎓 <span>Campus</span>Doubt
         </div>
 
         <div className="nav-links">
-          <a className="active">Home</a>
-          <a>Questions</a>
-          <a>Categories</a>
-          <a>Community</a>
-          <a>About</a>
+          <a className="active" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>Home</a>
+          <a onClick={() => navigate("/question")} style={{ cursor: "pointer" }}>Questions</a>
+          <a onClick={() => navigate("/categories")} style={{ cursor: "pointer" }}>Categories</a>
+          <a onClick={() => navigate("/question")} style={{ cursor: "pointer" }}>Community</a>
+          <a style={{ cursor: "pointer" }}>About</a>
         </div>
 
         <div className="nav-buttons">
-          <button className="login-btn">Login</button>
-          <button className="signup-btn">Sign Up</button>
+          <button className="login-btn" onClick={() => navigate("/login")}>Login</button>
+          <button className="signup-btn" onClick={() => navigate("/signup")}>Sign Up</button>
         </div>
       </nav>
 
@@ -43,24 +59,26 @@ function Home() {
             and grow together with the power of AI/ML.
           </p>
 
-          <div className="search-box">
+          <form className="search-box" onSubmit={handleSearch}>
             <span>🔍</span>
 
             <input
               type="text"
               placeholder="Search doubts (e.g. React, DSA, Python...)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
 
-            <button>Search</button>
-          </div>
+            <button type="submit">Search</button>
+          </form>
 
           <div className="popular-tags">
             <span>Popular Tags:</span>
-            <button>DSA</button>
-            <button>Python</button>
-            <button>Frontend</button>
-            <button>Backend</button>
-            <button>AI/ML</button>
+            <button onClick={() => handleTagSearch("DSA")}>DSA</button>
+            <button onClick={() => handleTagSearch("Python")}>Python</button>
+            <button onClick={() => handleTagSearch("Frontend")}>Frontend</button>
+            <button onClick={() => handleTagSearch("Backend")}>Backend</button>
+            <button onClick={() => handleTagSearch("AI/ML")}>AI/ML</button>
           </div>
         </div>
 
@@ -102,40 +120,25 @@ function Home() {
         </div>
 
         <div className="category-list">
-          <div className="category-card">
-            <div>🤖</div>
-            <h3>AI / ML</h3>
-          </div>
-
-          <div className="category-card">
-            <div>🧠</div>
-            <h3>DSA</h3>
-          </div>
-
-          <div className="category-card">
-            <div>🐍</div>
-            <h3>Python</h3>
-          </div>
-
-          <div className="category-card">
-            <div>💻</div>
-            <h3>Frontend</h3>
-          </div>
-
-          <div className="category-card">
-            <div>⚙️</div>
-            <h3>Backend</h3>
-          </div>
-
-          <div className="category-card">
-            <div>🔐</div>
-            <h3>Cyber Security</h3>
-          </div>
-
-          <div className="category-card">
-            <div>📊</div>
-            <h3>ML</h3>
-          </div>
+          {[
+            { emoji: "🤖", label: "AI / ML", tag: "AI/ML" },
+            { emoji: "🧠", label: "DSA", tag: "DSA" },
+            { emoji: "🐍", label: "Python", tag: "Python" },
+            { emoji: "💻", label: "Frontend", tag: "Frontend" },
+            { emoji: "⚙️", label: "Backend", tag: "Backend" },
+            { emoji: "🔐", label: "Cyber Security", tag: "Cyber Security" },
+            { emoji: "📊", label: "ML", tag: "ML" },
+          ].map(({ emoji, label, tag }) => (
+            <div
+              key={tag}
+              className="category-card"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigate(`/question?category=${encodeURIComponent(tag)}`)}
+            >
+              <div>{emoji}</div>
+              <h3>{label}</h3>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -149,11 +152,15 @@ function Home() {
               <p>Explore the newest questions from the community.</p>
             </div>
 
-            <button>View All →</button>
+            <button onClick={() => navigate("/question")}>View All →</button>
           </div>
 
           {/* Question 1 */}
-          <div className="question-card">
+          <div
+            className="question-card"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate("/questiondetail")}
+          >
             <div className="votes">
               <strong>24</strong>
               <span>votes</span>
@@ -177,7 +184,11 @@ function Home() {
           </div>
 
           {/* Question 2 */}
-          <div className="question-card">
+          <div
+            className="question-card"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate("/questiondetail")}
+          >
             <div className="votes">
               <strong>18</strong>
               <span>votes</span>
@@ -200,7 +211,11 @@ function Home() {
           </div>
 
           {/* Question 3 */}
-          <div className="question-card">
+          <div
+            className="question-card"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate("/questiondetail")}
+          >
             <div className="votes">
               <strong>12</strong>
               <span>votes</span>
@@ -231,92 +246,52 @@ function Home() {
           <div className="side-card">
             <div className="side-title">
               <h2>🔥 Trending Topics</h2>
-              <button>View All →</button>
+              <button onClick={() => navigate("/question")}>View All →</button>
             </div>
 
-            <div className="trend">
-              <strong>1</strong>
-              <div>
-                <h3>Python</h3>
-                <p>1.2K questions</p>
+            {[
+              { name: "Python", count: "1.2K questions" },
+              { name: "DSA", count: "980 questions" },
+              { name: "AI/ML", count: "860 questions" },
+              { name: "Web Development", count: "720 questions" },
+              { name: "Cyber Security", count: "650 questions" },
+            ].map((topic, i) => (
+              <div
+                key={topic.name}
+                className="trend"
+                style={{ cursor: "pointer" }}
+                onClick={() => navigate(`/question?category=${encodeURIComponent(topic.name)}`)}
+              >
+                <strong>{i + 1}</strong>
+                <div>
+                  <h3>{topic.name}</h3>
+                  <p>{topic.count}</p>
+                </div>
               </div>
-            </div>
-
-            <div className="trend">
-              <strong>2</strong>
-              <div>
-                <h3>DSA</h3>
-                <p>980 questions</p>
-              </div>
-            </div>
-
-            <div className="trend">
-              <strong>3</strong>
-              <div>
-                <h3>AI/ML</h3>
-                <p>860 questions</p>
-              </div>
-            </div>
-
-            <div className="trend">
-              <strong>4</strong>
-              <div>
-                <h3>Web Development</h3>
-                <p>720 questions</p>
-              </div>
-            </div>
-
-            <div className="trend">
-              <strong>5</strong>
-              <div>
-                <h3>Cyber Security</h3>
-                <p>650 questions</p>
-              </div>
-            </div>
+            ))}
           </div>
 
           {/* Top Contributors */}
           <div className="side-card">
             <div className="side-title">
               <h2>🏆 Top Contributors</h2>
-              <button>View All →</button>
+              <button onClick={() => navigate("/question")}>View All →</button>
             </div>
 
-            <div className="contributor">
-              <div className="avatar">A</div>
-
-              <div>
-                <h3>Aman Verma</h3>
-                <p>1.2K reputation</p>
+            {[
+              { name: "Aman Verma", rep: "1.2K reputation", initial: "A" },
+              { name: "Priya Singh", rep: "980 reputation", initial: "P" },
+              { name: "Karan Patel", rep: "860 reputation", initial: "K" },
+              { name: "Neha Sharma", rep: "720 reputation", initial: "N" },
+            ].map((person) => (
+              <div key={person.name} className="contributor">
+                <div className="avatar">{person.initial}</div>
+                <div>
+                  <h3>{person.name}</h3>
+                  <p>{person.rep}</p>
+                </div>
               </div>
-            </div>
-
-            <div className="contributor">
-              <div className="avatar">P</div>
-
-              <div>
-                <h3>Priya Singh</h3>
-                <p>980 reputation</p>
-              </div>
-            </div>
-
-            <div className="contributor">
-              <div className="avatar">K</div>
-
-              <div>
-                <h3>Karan Patel</h3>
-                <p>860 reputation</p>
-              </div>
-            </div>
-
-            <div className="contributor">
-              <div className="avatar">N</div>
-
-              <div>
-                <h3>Neha Sharma</h3>
-                <p>720 reputation</p>
-              </div>
-            </div>
+            ))}
           </div>
 
         </div>

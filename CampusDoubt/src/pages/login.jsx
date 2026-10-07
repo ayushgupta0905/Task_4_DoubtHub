@@ -1,10 +1,12 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import yellowBackground from "../assets/yellowbackground.png";
 import studentPhoto from "../assets/studentphoto.png";
 import { loginUser } from "../api/api";
 
 function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [domain, setDomain] = useState("");
@@ -53,7 +55,7 @@ function Login() {
       localStorage.setItem("domain", domain);
 
       // Login successful
-      window.location.href = "/";
+      navigate("/");
 
     } catch (err) {
       console.error("Login error:", err);
@@ -73,7 +75,7 @@ function Login() {
     >
       {/* Left Side */}
       <div className="login-left">
-        <div className="login-brand">
+        <div className="login-brand" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
           🎓 <span>Campus</span>Doubt
         </div>
 
@@ -230,7 +232,10 @@ function Login() {
                 <span>Remember me</span>
               </label>
 
-              <a href="#">
+              <a
+                href="#"
+                onClick={(e) => { e.preventDefault(); alert("Forgot password feature coming soon!"); }}
+              >
                 Forgot Password?
               </a>
             </div>
@@ -256,7 +261,10 @@ function Login() {
           {/* Signup */}
           <p className="signup-text">
             Don't have an account?
-            <a href="/signup"> Sign Up</a>
+            <a
+              href="#"
+              onClick={(e) => { e.preventDefault(); navigate("/signup"); }}
+            > Sign Up</a>
           </p>
 
         </div>

@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Questions() {
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeTab, setActiveTab] = useState("Latest");
   const [search, setSearch] = useState("");
@@ -127,20 +129,20 @@ function Questions() {
 
       <header className="questions-navbar">
 
-        <div className="questions-logo">
-          🎓 <span>Smart</span> College
+        <div className="questions-logo" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
+          🎓 <span>Campus</span>Doubt
         </div>
 
         <nav className="questions-top-links">
-          <a href="/home">Home</a>
+          <a onClick={() => navigate("/")} style={{ cursor: "pointer" }}>Home</a>
 
-          <a href="/questions" className="active">
+          <a onClick={() => navigate("/question")} className="active" style={{ cursor: "pointer" }}>
             Questions
           </a>
 
-          <a href="#">Categories</a>
+          <a onClick={() => navigate("/categories")} style={{ cursor: "pointer" }}>Categories</a>
 
-          <a href="#">About</a>
+          <a style={{ cursor: "pointer" }}>About</a>
         </nav>
 
         <div className="questions-top-search">
@@ -156,7 +158,7 @@ function Questions() {
 
         </div>
 
-        <button className="ask-top-btn">
+        <button className="ask-top-btn" onClick={() => navigate("/askquestion")}>
           Ask Question
         </button>
 
@@ -164,7 +166,7 @@ function Questions() {
           ♧
         </div>
 
-        <div className="user-profile">
+        <div className="user-profile" style={{ cursor: "pointer" }} onClick={() => navigate("/profile")}>
           <div className="user-avatar">
             P
           </div>
@@ -192,37 +194,37 @@ function Questions() {
 
           <div className="sidebar-menu">
 
-            <a href="/home">
+            <a onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
               <span>⌂</span>
               Home
             </a>
 
-            <a href="/questions" className="selected">
+            <a onClick={() => navigate("/question")} className="selected" style={{ cursor: "pointer" }}>
               <span>⌕</span>
               Questions
             </a>
 
-            <a href="#">
+            <a onClick={() => navigate("/askquestion")} style={{ cursor: "pointer" }}>
               <span>⊕</span>
               Ask a Question
             </a>
 
-            <a href="#">
+            <a onClick={() => navigate("/question")} style={{ cursor: "pointer" }}>
               <span>♨</span>
               Trending
             </a>
 
-            <a href="#">
+            <a onClick={() => navigate("/bookmarks")} style={{ cursor: "pointer" }}>
               <span>♡</span>
               Bookmarks
             </a>
 
-            <a href="#">
+            <a onClick={() => navigate("/myanswer")} style={{ cursor: "pointer" }}>
               <span>♙</span>
               My Answers
             </a>
 
-            <a href="#">
+            <a onClick={() => navigate("/profile")} style={{ cursor: "pointer" }}>
               <span>♙</span>
               Profile
             </a>
@@ -424,7 +426,8 @@ function Questions() {
                   <div className="question-list-content">
 
                     <a
-                      href="/question"
+                      onClick={() => navigate("/questiondetail")}
+                      style={{ cursor: "pointer" }}
                       className="question-title"
                     >
                       {question.title}
@@ -520,7 +523,7 @@ function Questions() {
               and get helpful answers.
             </p>
 
-            <button className="ask-question-btn">
+            <button className="ask-question-btn" onClick={() => navigate("/askquestion")}>
               ⊕ &nbsp; Ask Question
             </button>
 
