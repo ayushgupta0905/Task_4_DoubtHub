@@ -3,6 +3,7 @@ const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 const generateOTP = require("../utils/generateOTP");
 const sendEmail = require("../utils/sendEmail");
+
 const sendOTP = async (req, res) => {
     try {
         const { email } = req.body;
@@ -23,10 +24,13 @@ const sendOTP = async (req, res) => {
 
         const otp = generateOTP();
 
-        user.otp = otp;
-        user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
-
-        await user.save();
+        await User.updateOne(
+            { email },
+            {
+                otp: otp,
+                otpExpires: new Date(Date.now() + 10 * 60 * 1000)
+            }
+        );
 
         await sendEmail(
             email,
@@ -37,61 +41,120 @@ const sendOTP = async (req, res) => {
         res.status(200).json({
             message: "OTP sent successfully"
         });
+
     } catch (error) {
-        console.error("Send OTP error:", error);
+        console.log("FULL OTP ERROR:");
+        console.log(error);
 
         res.status(500).json({
-            message: "Failed to send OTP"
+            message: error.message
         });
     }
 };
+
 
 const verifyOTP = async (req, res) => {
     try {
         const { email, otp } = req.body;
 
-        if (!email || !otp)
-            return res.status(400).json({ message: "Email and OTP are required" });
+        if (!email || !otp) {
+            return res.status(400).json({
+                message: "Email and OTP are required"
+            });
+        }
 
         const user = await User.findOne({ email });
 
-        if (!user)
-            return res.status(404).json({ message: "User not found" });
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
 
-        if (!user.otp || !user.otpExpires)
-            return res.status(400).json({ message: "No OTP requested" });
+        if (!user.otp || !user.otpExpires) {
+            return res.status(400).json({
+                message: "No OTP requested"
+            });
+        }
 
-        if (user.otpExpires < new Date())
-            return res.status(400).json({ message: "OTP has expired" });
+        if (user.otpExpires < new Date()) {
+            return res.status(400).json({
+                message: "OTP has expired"
+            });
+        }
 
-        if (user.otp !== otp.toString())
-            return res.status(400).json({ message: "Invalid OTP" });
+        if (user.otp !== otp.toString()) {
+            return res.status(400).json({
+                message: "Invalid OTP"
+            });
+        }
 
-        user.otp = undefined;
-        user.otpExpires = undefined;
-        await user.save();
+        await User.updateOne(
+            { _id: user._id },
+            {
+                $unset: {
+                    otp: "",
+                    otpExpires: ""
+                }
+            }
+        );
 
-        res.status(200).json({ message: "OTP verified successfully" });
+        res.status(200).json({
+            message: "OTP verified successfully"
+        });
 
     } catch (error) {
         console.error("Verify OTP error:", error);
-        res.status(500).json({ message: "Failed to verify OTP" });
+
+        res.status(500).json({
+            message: "Failed to verify OTP"
+        });
     }
 };
 
 
 const signup = async (req, res) => {
     try {
-        const { name, email, password, domain } = req.body;
+        const {
+            name,
+            email,
+            college,
+            branch,
+            password,
+            confirmPassword,
+            year,
+            graduationYear,
+            domain
+        } = req.body;
 
-        if (!name || !email || !password || !domain) {
-            return res.status(400).json({ message: "All fields are required" });
+        if (
+            !name ||
+            !email ||
+            !college ||
+            !branch ||
+            !password ||
+            !confirmPassword ||
+            !year ||
+            !graduationYear ||
+            !domain
+        ) {
+            return res.status(400).json({
+                message: "All fields are required"
+            });
+        }
+
+        if (password !== confirmPassword) {
+            return res.status(400).json({
+                message: "Passwords do not match"
+            });
         }
 
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
-            return res.status(409).json({ message: "Email already registered" });
+            return res.status(409).json({
+                message: "Email already registered"
+            });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -99,7 +162,11 @@ const signup = async (req, res) => {
         const user = await User.create({
             name,
             email,
+            college,
+            branch,
             password: hashedPassword,
+            year,
+            graduationYear,
             domain
         });
 
@@ -112,15 +179,24 @@ const signup = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                domain: user.domain,
-                points: user.points
+                college: user.college,
+                branch: user.branch,
+                year: user.year,
+                graduationYear: user.graduationYear,
+                points: user.points,
+                domain: user.domain
             }
         });
+
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Server error" });
+
+        res.status(500).json({
+            message: "Server error"
+        });
     }
 };
+
 
 const login = async (req, res) => {
     try {
@@ -135,7 +211,9 @@ const login = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(401).json({ message: "Invalid email or password" });
+            return res.status(401).json({
+                message: "Invalid email or password"
+            });
         }
 
         if (user.domain !== domain) {
@@ -144,10 +222,15 @@ const login = async (req, res) => {
             });
         }
 
-        const passwordMatch = await bcrypt.compare(password, user.password);
+        const passwordMatch = await bcrypt.compare(
+            password,
+            user.password
+        );
 
         if (!passwordMatch) {
-            return res.status(401).json({ message: "Invalid email or password" });
+            return res.status(401).json({
+                message: "Invalid email or password"
+            });
         }
 
         const token = generateToken(user._id);
@@ -159,24 +242,36 @@ const login = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                college: user.college,
+                branch: user.branch,
+                year: user.year,
+                graduationYear: user.graduationYear,
                 domain: user.domain,
                 points: user.points
             }
         });
+
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Server error" });
+
+        res.status(500).json({
+            message: "Server error"
+        });
     }
 };
 
+
 const getProfile = async (req, res) => {
-    res.status(200).json({ user: req.user });
+    res.status(200).json({
+        user: req.user
+    });
 };
 
-module.exports = { 
-    signup, 
+
+module.exports = {
+    signup,
     login,
-    getProfile ,
+    getProfile,
     sendOTP,
     verifyOTP
-    };
+};
