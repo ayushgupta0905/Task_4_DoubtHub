@@ -7109,3 +7109,946 @@ button {
     line-height: 1.4;
   }
 }
+
+
+
+/* =========================================
+   BOOKMARKS PAGE
+========================================= */
+
+.bookmarks-page {
+  min-height: 100vh;
+  color: #172033;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================
+   NAVBAR
+========================================= */
+
+.bookmarks-navbar {
+  height: 72px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #eeeeee;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  gap: 30px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.bookmarks-logo {
+  font-size: 25px;
+  font-weight: 800;
+  color: #172033;
+  white-space: nowrap;
+}
+
+.bookmarks-logo span {
+  color: #f5b900;
+}
+
+.bookmarks-nav {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.bookmarks-nav a {
+  text-decoration: none;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.bookmarks-nav a:hover {
+  color: #e8a900;
+}
+
+.bookmarks-search-top {
+  margin-left: auto;
+  width: 370px;
+  height: 42px;
+  border: 1px solid #e5e5e5;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: #fafafa;
+}
+
+.bookmarks-search-top span {
+  font-size: 22px;
+  margin-right: 9px;
+}
+
+.bookmarks-search-top input {
+  border: none;
+  outline: none;
+  width: 100%;
+  background: transparent;
+  font-size: 13px;
+  color: #172033;
+}
+
+.bookmarks-notification {
+  border: none;
+  background: transparent;
+  font-size: 23px;
+  cursor: pointer;
+}
+
+.bookmarks-nav-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.bookmarks-nav-user img {
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+
+/* =========================================
+   MAIN LAYOUT
+========================================= */
+
+.bookmarks-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 26px;
+  padding: 16px;
+  max-width: 1600px;
+  margin: auto;
+}
+
+
+/* =========================================
+   SIDEBAR
+========================================= */
+
+.bookmarks-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.bookmarks-menu {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 17px;
+  padding: 12px 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.bookmarks-menu a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 14px;
+  margin-bottom: 3px;
+  border-radius: 12px;
+  color: #263249;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.bookmarks-menu a span {
+  width: 22px;
+  text-align: center;
+  font-size: 19px;
+}
+
+.bookmarks-menu a:hover {
+  background: #fff4ca;
+}
+
+.bookmarks-menu a.active {
+  background: #ffe9a6;
+  color: #7d5a00;
+  font-weight: 700;
+}
+
+
+/* =========================================
+   NEED HELP CARD
+========================================= */
+
+.bookmarks-help-card {
+  min-height: 285px;
+  background: linear-gradient(
+    145deg,
+    #ffd75a,
+    #ffca28
+  );
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+  padding: 25px 18px;
+}
+
+.bookmarks-help-content {
+  position: relative;
+  z-index: 2;
+  width: 65%;
+}
+
+.bookmarks-help-content h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  color: #172033;
+}
+
+.bookmarks-help-content p {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #3f3520;
+}
+
+.bookmarks-help-content a {
+  display: inline-block;
+  padding: 9px 13px;
+  border-radius: 9px;
+  background: #172033;
+  color: white;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bookmarks-help-image {
+  position: absolute;
+  width: 155px;
+  height: 175px;
+  object-fit: contain;
+  right: -15px;
+  bottom: -5px;
+}
+
+
+/* =========================================
+   MAIN CONTENT
+========================================= */
+
+.bookmarks-main {
+  min-width: 0;
+}
+
+.bookmarks-page-header {
+  min-height: 120px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 20px;
+  padding: 20px 28px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.04);
+}
+
+.bookmarks-header-icon {
+  width: 65px;
+  height: 65px;
+  border-radius: 18px;
+  background: #ffca28;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  flex-shrink: 0;
+}
+
+.bookmarks-page-header h1 {
+  margin: 0 0 5px;
+  font-size: 29px;
+  color: #172033;
+}
+
+.bookmarks-page-header p {
+  margin: 0;
+  color: #536078;
+  font-size: 14px;
+}
+
+.bookmarks-header-decoration {
+  margin-left: auto;
+  font-size: 60px;
+  opacity: 0.75;
+  transform: rotate(-5deg);
+}
+
+
+/* =========================================
+   CONTENT GRID
+========================================= */
+
+.bookmarks-content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 285px;
+  gap: 16px;
+}
+
+
+/* =========================================
+   TOOLBAR
+========================================= */
+
+.bookmarks-question-section {
+  min-width: 0;
+}
+
+.bookmarks-toolbar {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 15px;
+  padding: 10px 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #eeeeee;
+}
+
+.bookmarks-page-search {
+  height: 40px;
+  border: 1px solid #e2e4e8;
+  border-radius: 21px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.bookmarks-page-search span {
+  font-size: 21px;
+  margin-right: 8px;
+}
+
+.bookmarks-page-search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-size: 13px;
+}
+
+.bookmarks-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.bookmarks-toolbar-actions select {
+  height: 40px;
+  border: 1px solid #e0e2e5;
+  border-radius: 9px;
+  padding: 0 12px;
+  background: white;
+  color: #263249;
+  outline: none;
+  font-size: 12px;
+}
+
+.toolbar-view {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e3e3e3;
+  background: white;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 17px;
+}
+
+.toolbar-view.active {
+  background: #f2f3f4;
+}
+
+
+/* =========================================
+   BOOKMARK QUESTION CARDS
+========================================= */
+
+.bookmark-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bookmark-question-card {
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid #eeeeee;
+  border-radius: 16px;
+  padding: 17px 18px;
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr) 125px 45px;
+  gap: 14px;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.bookmark-question-card:hover {
+  border-color: #f3ce5a;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+
+/* Vote */
+
+.bookmark-vote-box {
+  width: 43px;
+  min-height: 52px;
+  border-radius: 50%;
+  background: #f7f8f9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.bookmark-vote-box span {
+  font-size: 15px;
+  color: #526078;
+}
+
+.bookmark-vote-box strong {
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+
+/* Question */
+
+.bookmark-question-content {
+  min-width: 0;
+}
+
+.bookmark-question-title {
+  display: block;
+  color: #172033;
+  font-size: 16px;
+  line-height: 1.3;
+  font-weight: 700;
+  text-decoration: none;
+  margin-bottom: 5px;
+}
+
+.bookmark-question-title:hover {
+  color: #d99d00;
+}
+
+.bookmark-question-description {
+  margin: 0 0 8px;
+  color: #536078;
+  font-size: 12px;
+  line-height: 1.45;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+
+/* Tags */
+
+.bookmark-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.bookmark-tags span {
+  background: #f1f3f5;
+  color: #4a566b;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+
+/* Author */
+
+.bookmark-author {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: #69758a;
+  font-size: 10px;
+}
+
+.bookmark-author img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.bookmark-author span:first-of-type {
+  color: #364257;
+  font-weight: 600;
+}
+
+
+/* Stats */
+
+.bookmark-question-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #536078;
+  font-size: 11px;
+}
+
+.bookmark-question-stats div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bookmark-question-stats div span:first-child {
+  font-size: 15px;
+}
+
+
+/* Bookmark */
+
+.bookmark-remove-button {
+  width: 43px;
+  height: 43px;
+  border: none;
+  border-radius: 12px;
+  background: #fff2c7;
+  cursor: pointer;
+  font-size: 20px;
+  transition: 0.2s;
+}
+
+.bookmark-remove-button:hover {
+  background: #ffd95a;
+  transform: scale(1.05);
+}
+
+
+/* =========================================
+   RIGHT SIDEBAR
+========================================= */
+
+.bookmarks-right-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bookmark-filter-card,
+.bookmark-stats-card {
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid #eeeeee;
+  border-radius: 17px;
+  padding: 20px;
+}
+
+.bookmark-side-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 20px;
+}
+
+.bookmark-side-title span {
+  color: #f0b400;
+  font-size: 19px;
+}
+
+.bookmark-side-title h2 {
+  margin: 0;
+  font-size: 16px;
+  color: #172033;
+}
+
+.bookmark-filter-card > label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 7px;
+  color: #263249;
+}
+
+.bookmark-filter-card select,
+.bookmark-filter-card > input {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #e0e3e7;
+  border-radius: 9px;
+  background: white;
+  padding: 0 11px;
+  margin-bottom: 17px;
+  outline: none;
+  color: #4c586c;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.bookmark-filter-card select:focus,
+.bookmark-filter-card > input:focus {
+  border-color: #f3c535;
+}
+
+
+/* Checkboxes */
+
+.bookmark-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.bookmark-checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #38445a;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.bookmark-checkboxes input {
+  width: 17px;
+  height: 17px;
+  accent-color: #f5bd00;
+}
+
+.bookmark-checkboxes span {
+  color: #8992a1;
+  margin-left: 2px;
+}
+
+
+/* =========================================
+   BOOKMARK STATS
+========================================= */
+
+.bookmark-stats-card {
+  padding-bottom: 24px;
+}
+
+.bookmark-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bookmark-total > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bookmark-total strong {
+  font-size: 31px;
+  color: #172033;
+}
+
+.bookmark-total span {
+  color: #667187;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.bookmark-big-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 15px;
+  background: #fff4d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 27px;
+}
+
+
+/* =========================================
+   EMPTY STATE
+========================================= */
+
+.no-bookmarks {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 16px;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.no-bookmarks div {
+  font-size: 45px;
+  margin-bottom: 10px;
+}
+
+.no-bookmarks h2 {
+  margin: 0 0 7px;
+  font-size: 20px;
+}
+
+.no-bookmarks p {
+  margin: 0;
+  color: #68748a;
+  font-size: 13px;
+}
+
+
+/* =========================================
+   RESPONSIVE - 1200px
+========================================= */
+
+@media (max-width: 1200px) {
+
+  .bookmarks-navbar {
+    padding: 0 20px;
+    gap: 18px;
+  }
+
+  .bookmarks-nav {
+    gap: 16px;
+  }
+
+  .bookmarks-search-top {
+    width: 260px;
+  }
+
+  .bookmarks-layout {
+    grid-template-columns: 190px 1fr;
+  }
+
+  .bookmarks-content-grid {
+    grid-template-columns: minmax(0, 1fr) 250px;
+  }
+
+  .bookmark-question-card {
+    grid-template-columns: 45px minmax(0, 1fr) 100px 42px;
+    gap: 10px;
+  }
+
+}
+
+
+/* =========================================
+   RESPONSIVE - 1000px
+========================================= */
+
+@media (max-width: 1000px) {
+
+  .bookmarks-nav {
+    display: none;
+  }
+
+  .bookmarks-search-top {
+    width: 300px;
+  }
+
+  .bookmarks-layout {
+    grid-template-columns: 180px 1fr;
+  }
+
+  .bookmarks-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bookmarks-right-sidebar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+}
+
+
+/* =========================================
+   RESPONSIVE - 750px
+========================================= */
+
+@media (max-width: 750px) {
+
+  .bookmarks-navbar {
+    height: 65px;
+    padding: 0 14px;
+  }
+
+  .bookmarks-logo {
+    font-size: 21px;
+  }
+
+  .bookmarks-search-top {
+    display: none;
+  }
+
+  .bookmarks-notification {
+    margin-left: auto;
+  }
+
+  .bookmarks-nav-user span:not(:first-child) {
+    display: none;
+  }
+
+  .bookmarks-layout {
+    display: block;
+    padding: 12px;
+  }
+
+  .bookmarks-sidebar {
+    margin-bottom: 14px;
+  }
+
+  .bookmarks-menu {
+    display: flex;
+    overflow-x: auto;
+    gap: 5px;
+  }
+
+  .bookmarks-menu a {
+    min-width: max-content;
+    margin: 0;
+  }
+
+  .bookmarks-help-card {
+    display: none;
+  }
+
+  .bookmarks-page-header {
+    padding: 18px;
+  }
+
+  .bookmarks-page-header h1 {
+    font-size: 24px;
+  }
+
+  .bookmarks-header-decoration {
+    display: none;
+  }
+
+  .bookmarks-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bookmarks-toolbar-actions {
+    justify-content: flex-end;
+  }
+
+  .bookmark-question-card {
+    grid-template-columns: 42px 1fr 42px;
+  }
+
+  .bookmark-question-stats {
+    display: none;
+  }
+
+}
+
+
+/* =========================================
+   RESPONSIVE - 520px
+========================================= */
+
+@media (max-width: 520px) {
+
+  .bookmarks-layout {
+    padding: 8px;
+  }
+
+  .bookmarks-page-header {
+    border-radius: 14px;
+  }
+
+  .bookmarks-header-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 23px;
+  }
+
+  .bookmarks-page-header h1 {
+    font-size: 21px;
+  }
+
+  .bookmarks-page-header p {
+    font-size: 11px;
+  }
+
+  .bookmarks-question-card {
+    grid-template-columns: 1fr 40px;
+    padding: 14px;
+  }
+
+  .bookmark-vote-box {
+    display: none;
+  }
+
+  .bookmark-question-title {
+    font-size: 14px;
+  }
+
+  .bookmark-question-description {
+    font-size: 11px;
+  }
+
+  .bookmark-remove-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .bookmarks-right-sidebar {
+    display: flex;
+  }
+
+}
+
+
+/* =========================================
+   RESPONSIVE - 400px
+========================================= */
+
+@media (max-width: 400px) {
+
+  .bookmarks-nav-user img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .bookmarks-logo {
+    font-size: 19px;
+  }
+
+  .bookmarks-page-header {
+    gap: 10px;
+  }
+
+  .bookmarks-toolbar-actions select {
+    flex: 1;
+  }
+
+  .bookmark-tags span {
+    font-size: 9px;
+  }
+
+}

@@ -7,19 +7,20 @@ import Questions from "./pages/question";
 import QuestionDetail from "./pages/questiondetail";
 import AskQuestion from "./pages/askquestion";
 import Profile from "./pages/profile";
+import Bookmarks from "./pages/bookmarks";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Home />} />
 
         <Route path="/login" element={<Login />} />
 
         <Route path="/signup" element={<Signup />} />
 
-        <Route path="/home" element={<Home />} />
+       
 
         <Route path="/questions" element={<Questions />} />
 
@@ -36,6 +37,11 @@ function App() {
         <Route
           path="/profile"
           element={<Profile />}
+        />
+
+        <Route
+          path="/bookmarks"
+          element={<Bookmarks />}
         />
 
       </Routes>
