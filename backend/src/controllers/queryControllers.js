@@ -12,22 +12,24 @@ const createQuery = async (req, res) => {
     try {
         const {
             title,
-            description,
-            domain,
-            tags
+            description
         } = req.body;
 
-        if (!title || !description || !domain) {
+        if (!title || !description) {
             return res.status(400).json({
-                message: "Title, description and domain are required"
+                message: "Title and description are required"
             });
         }
+
+        // Model 1 predicts the domain
+        const prediction = await getPrediction(
+            title + " " + description
+        );
 
         const query = await Query.create({
             title,
             description,
-            domain,
-            tags: tags || [],
+            domain: prediction,
             userId: req.user._id
         });
 
@@ -195,7 +197,7 @@ const resolveQuery = async (req, res) => {
 };
 
 
-//  similar questions from ML model
+// Get similar questions from ML model
 const getSimilarQueries = async (req, res) => {
     try {
         const query = await Query.findById(req.params.id);
@@ -290,4 +292,4 @@ module.exports = {
     getSimilarQueries,
     predictDomain,
     recommendQueries
-};  
+};

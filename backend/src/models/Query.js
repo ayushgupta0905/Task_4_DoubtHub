@@ -27,14 +27,8 @@ const querySchema = new mongoose.Schema(
                 "Backend",
                 "Cyber Security",
                 "ML",
-                "Web Devlopment"
-
+                "Web Development"
             ]
-        },
-
-        tags: {
-            type: [String],
-            default: []
         },
 
         userId: {
