@@ -1,4 +1,4 @@
-import studentPhoto from "../assets/studentphoto.png";
+
 import yellowBackground from "../assets/yellowbackground.png";
 
 function Login() {
@@ -38,13 +38,7 @@ function Login() {
             <div>✓ Improve your technical skills</div>
           </div>
 
-          {/* Student Photo */}
-          <div className="student-image">
-            <img
-              src={studentPhoto}
-              alt="Student"
-            />
-          </div>
+          
         </div>
       </div>
 
