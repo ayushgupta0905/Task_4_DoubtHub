@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import studentPhoto from "../assets/studentphoto.png";
 import { signupUser } from "../api/api";
 
 function Signup() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -79,7 +81,7 @@ function Signup() {
       );
 
       setTimeout(() => {
-        window.location.href = "/login";
+        navigate("/login");
       }, 1500);
 
     } catch (err) {
@@ -99,7 +101,7 @@ function Signup() {
       {/* Left Side */}
       <div className="signup-left">
 
-        <div className="signup-brand">
+        <div className="signup-brand" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
           🎓 <span>Campus</span>Doubt
         </div>
 
@@ -441,9 +443,9 @@ function Signup() {
 
                 <span>
                   I agree to{" "}
-                  <a href="#">Terms of Service</a>{" "}
+                  <a href="#" onClick={(e) => { e.preventDefault(); alert("Terms of Service coming soon"); }}>Terms of Service</a>{" "}
                   and{" "}
-                  <a href="#">Privacy Policy</a>
+                  <a href="#" onClick={(e) => { e.preventDefault(); alert("Privacy Policy coming soon"); }}>Privacy Policy</a>
                 </span>
               </label>
             </div>
@@ -466,7 +468,7 @@ function Signup() {
           {/* Login */}
           <p className="signup-login">
             Already have an account?
-            <a href="/login">Login</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); navigate("/login"); }}> Login</a>
           </p>
 
         </div>
