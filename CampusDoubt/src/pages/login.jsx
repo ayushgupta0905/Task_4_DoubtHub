@@ -234,7 +234,7 @@ function Login() {
 
               <a
                 href="#"
-                onClick={(e) => { e.preventDefault(); alert("Forgot password feature coming soon!"); }}
+                onClick={(e) => { e.preventDefault(); navigate("/forgotpassword"); }}
               >
                 Forgot Password?
               </a>
