@@ -723,12 +723,13 @@ button {
 
 .login-page {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  align-items: stretch;
   background-color: #fffdf5;
   background-size: cover;
   background-position: center;
-  overflow: hidden;
+  background-repeat: no-repeat;
+  overflow-x: hidden;
 }
 
 /* =========================
@@ -736,17 +737,20 @@ button {
 ========================= */
 
 .login-left {
+  flex: 1 1 50%;
   min-height: 100vh;
-  padding: 45px 70px;
+  padding: clamp(24px, 4vh, 45px) clamp(24px, 4vw, 70px);
   display: flex;
   flex-direction: column;
   position: relative;
+  box-sizing: border-box;
 }
 
 .login-brand {
-  font-size: 25px;
+  font-size: clamp(18px, 1.8vw, 25px);
   font-weight: 800;
   color: #111111;
+  flex-shrink: 0;
 }
 
 .login-brand span {
@@ -756,23 +760,23 @@ button {
 .login-content {
   max-width: 560px;
   margin: auto 0;
-  padding-bottom: 50px;
+  padding-bottom: clamp(20px, 3vh, 50px);
 }
 
 .login-small-title {
   color: #b98400;
-  font-size: 13px;
+  font-size: clamp(10px, 0.85vw, 13px);
   font-weight: 700;
   letter-spacing: 3px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .login-content h1 {
   color: #111111;
-  font-size: 58px;
-  line-height: 1.05;
-  letter-spacing: -2px;
-  margin-bottom: 25px;
+  font-size: clamp(26px, 3.8vw, 58px);
+  line-height: 1.08;
+  letter-spacing: -1px;
+  margin-bottom: 18px;
 }
 
 .login-content h1 span {
@@ -782,20 +786,20 @@ button {
 .login-description {
   max-width: 500px;
   color: #263238;
-  font-size: 17px;
+  font-size: clamp(13px, 1.1vw, 17px);
   line-height: 1.65;
 }
 
 .login-points {
-  margin-top: 28px;
+  margin-top: clamp(14px, 2vh, 28px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .login-points div {
   color: #222222;
-  font-size: 14px;
+  font-size: clamp(11px, 0.9vw, 14px);
   font-weight: 500;
 }
 
@@ -804,29 +808,32 @@ button {
 ========================= */
 
 .login-right {
+  flex: 1 1 50%;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px;
-  background: rgba(255, 255, 255, 0.78);
+  padding: clamp(20px, 3vw, 40px);
+  background: rgba(255, 255, 255, 0.82);
+  box-sizing: border-box;
 }
 
 .login-box {
   width: 100%;
-  max-width: 600px;
+  max-width: 520px;
   background: #ffffff;
-  padding: 48px 60px;
+  padding: clamp(24px, 4vh, 48px) clamp(20px, 4vw, 60px);
   border-radius: 22px;
   border: 1px solid #eeeeee;
   box-shadow: 0 20px 55px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
 }
 
 .login-box h2 {
   color: #111111;
-  font-size: 38px;
+  font-size: clamp(22px, 2.5vw, 38px);
   line-height: 1.2;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .login-box h2 span {
@@ -835,8 +842,8 @@ button {
 
 .login-subtitle {
   color: #59636e;
-  font-size: 15px;
-  margin-bottom: 32px;
+  font-size: clamp(13px, 1vw, 15px);
+  margin-bottom: clamp(18px, 2.5vh, 32px);
 }
 
 /* =========================
@@ -844,33 +851,35 @@ button {
 ========================= */
 
 .input-group {
-  margin-bottom: 22px;
+  margin-bottom: clamp(14px, 1.8vh, 22px);
 }
 
 .input-group label {
   display: block;
   color: #111111;
-  font-size: 15px;
+  font-size: clamp(13px, 1vw, 15px);
   font-weight: 600;
-  margin-bottom: 9px;
+  margin-bottom: 8px;
 }
 
 .input-wrapper {
   width: 100%;
-  height: 56px;
+  height: clamp(44px, 5.5vh, 56px);
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 16px;
+  gap: 10px;
+  padding: 0 14px;
   border: 1px solid #d9dee5;
   border-radius: 10px;
   background: #ffffff;
   transition: 0.2s;
+  box-sizing: border-box;
 }
 
 .input-wrapper > span {
   color: #536273;
-  font-size: 18px;
+  font-size: clamp(14px, 1.2vw, 18px);
+  flex-shrink: 0;
 }
 
 .input-wrapper:focus-within {
@@ -881,13 +890,13 @@ button {
 .input-wrapper input,
 .input-wrapper select {
   flex: 1;
-  width: 100%;
+  min-width: 0;
   height: 100%;
   border: none;
   outline: none;
   background: transparent;
   color: #111111;
-  font-size: 15px;
+  font-size: clamp(13px, 1vw, 15px);
 }
 
 .input-wrapper input::placeholder {
@@ -901,6 +910,7 @@ button {
 .password-icon {
   cursor: pointer;
   font-size: 15px !important;
+  flex-shrink: 0;
 }
 
 /* =========================
@@ -911,7 +921,9 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 5px 0 25px;
+  margin: 4px 0 clamp(14px, 2vh, 25px);
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .remember {
@@ -919,20 +931,21 @@ button {
   align-items: center;
   gap: 8px;
   color: #4e5965;
-  font-size: 14px;
+  font-size: clamp(12px, 0.9vw, 14px);
   cursor: pointer;
 }
 
 .remember input {
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
   accent-color: #e6a900;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .login-options a {
   color: #e0a300;
-  font-size: 14px;
+  font-size: clamp(12px, 0.9vw, 14px);
   font-weight: 600;
   text-decoration: none;
 }
@@ -947,12 +960,12 @@ button {
 
 .login-main-btn {
   width: 100%;
-  height: 56px;
+  height: clamp(44px, 5.5vh, 56px);
   border: none;
   border-radius: 10px;
   background: #f5b800;
   color: #111111;
-  font-size: 16px;
+  font-size: clamp(14px, 1.1vw, 16px);
   font-weight: 700;
   cursor: pointer;
   transition: 0.2s;
@@ -971,7 +984,7 @@ button {
   display: flex;
   align-items: center;
   gap: 15px;
-  margin: 28px 0 22px;
+  margin: clamp(16px, 2.5vh, 28px) 0 clamp(12px, 2vh, 22px);
 }
 
 .login-divider span {
@@ -984,6 +997,72 @@ button {
   color: #68727e;
   font-size: 14px;
   margin: 0;
+}
+
+/* =========================
+   LOGIN RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+  .login-page {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .login-left {
+    flex: none;
+    width: 100%;
+    min-height: auto;
+    padding: 32px 5%;
+  }
+
+  .login-content {
+    padding-bottom: 20px;
+    margin: 24px 0 0;
+  }
+
+  .login-right {
+    flex: none;
+    width: 100%;
+    min-height: auto;
+    padding: 24px 5% 48px;
+  }
+
+  .login-box {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-box {
+    padding: 24px 18px;
+    border-radius: 16px;
+  }
+
+  .login-box h2 {
+    font-size: 22px;
+  }
+}
+
+/* =========================
+   SIGNUP TEXT (login page)
+========================= */
+
+.signup-text {
+  text-align: center;
+  color: #4e5965;
+  font-size: clamp(13px, 1vw, 14px);
+  margin: 0;
+}
+
+.signup-text a {
+  color: #e0a300;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signup-text a:hover {
+  text-decoration: underline;
 }
 
 
