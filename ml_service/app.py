@@ -4,7 +4,7 @@ import joblib
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from training.Clustering import retrain
+from training.recommend import retrain
 
 
 app = FastAPI()
@@ -19,10 +19,12 @@ class User_input(BaseModel):
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Query Classification API. Use the /predict endpoint to classify your query."}
+    return {"message": "Welcome to the Query Classification API.",
+            "endpoints": ["/predict", "/recommend"],
+            "description": "This API classifies user queries into different domains and provides recommendations based on the query."}
 
 
-# data_path = "./ml_service/data/Clustering_data.csv"
+
 @app.post("/recommend")
 def recommend_querry(data: User_input):
     domain = get_domain(data)
