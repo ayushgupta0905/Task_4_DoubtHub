@@ -1,116 +1,6 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
-const generateOTP = require("../utils/generateOTP");
-const sendEmail = require("../utils/sendEmail");
-
-const sendOTP = async (req, res) => {
-    try {
-        const { email } = req.body;
-
-        if (!email) {
-            return res.status(400).json({
-                message: "Email is required"
-            });
-        }
-
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({
-                message: "User not found"
-            });
-        }
-
-        const otp = generateOTP();
-
-        await User.updateOne(
-            { email },
-            {
-                otp: otp,
-                otpExpires: new Date(Date.now() + 10 * 60 * 1000)
-            }
-        );
-
-        await sendEmail(
-            email,
-            "DoubtHub OTP Verification",
-            `Your OTP for DoubtHub is ${otp}. This OTP is valid for 10 minutes.`
-        );
-
-        res.status(200).json({
-            message: "OTP sent successfully"
-        });
-
-    } catch (error) {
-        console.log("FULL OTP ERROR:");
-        console.log(error);
-
-        res.status(500).json({
-            message: error.message
-        });
-    }
-};
-
-
-const verifyOTP = async (req, res) => {
-    try {
-        const { email, otp } = req.body;
-
-        if (!email || !otp) {
-            return res.status(400).json({
-                message: "Email and OTP are required"
-            });
-        }
-
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({
-                message: "User not found"
-            });
-        }
-
-        if (!user.otp || !user.otpExpires) {
-            return res.status(400).json({
-                message: "No OTP requested"
-            });
-        }
-
-        if (user.otpExpires < new Date()) {
-            return res.status(400).json({
-                message: "OTP has expired"
-            });
-        }
-
-        if (user.otp !== otp.toString()) {
-            return res.status(400).json({
-                message: "Invalid OTP"
-            });
-        }
-
-        await User.updateOne(
-            { _id: user._id },
-            {
-                $unset: {
-                    otp: "",
-                    otpExpires: ""
-                }
-            }
-        );
-
-        res.status(200).json({
-            message: "OTP verified successfully"
-        });
-
-    } catch (error) {
-        console.error("Verify OTP error:", error);
-
-        res.status(500).json({
-            message: "Failed to verify OTP"
-        });
-    }
-};
 
 
 const signup = async (req, res) => {
@@ -272,6 +162,5 @@ module.exports = {
     signup,
     login,
     getProfile,
-    sendOTP,
-    verifyOTP
+    
 };

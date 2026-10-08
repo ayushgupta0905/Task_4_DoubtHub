@@ -7,8 +7,8 @@ const domains = [
     "Frontend",
     "Backend",
     "Cyber Security",
-    "ML",
-    "Web Development"
+    "Machine Learning",
+    
 ];
 
 const userSchema = new mongoose.Schema(
@@ -37,13 +37,6 @@ const userSchema = new mongoose.Schema(
             default: 0
         },
 
-        otp: {
-            type: String
-        },
-
-        otpExpires: {
-            type: Date
-        },
 
         college: {
             type: String,
