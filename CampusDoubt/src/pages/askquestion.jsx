@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import girlWithBook from "../assets/girlwithbook.png";
 import SimilarQuestions from "./similarquestion";
 import "./similarquestion.css";
 
 function AskQuestion() {
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [showRecommendations, setShowRecommendations] = useState(false);
@@ -74,10 +76,10 @@ function AskQuestion() {
         </div>
 
         <nav className="ask-question-nav">
-          <a href="/home">Home</a>
-          <a href="/questions">Questions</a>
-          <a href="#">Categories</a>
-          <a href="/trending">Trending</a>
+          <a onClick={() => navigate("/")} style={{ cursor: "pointer" }}>Home</a>
+          <a onClick={() => navigate("/question")} style={{ cursor: "pointer" }}>Questions</a>
+          <a onClick={() => navigate("/categories")} style={{ cursor: "pointer" }}>Categories</a>
+          <a onClick={() => navigate("/")} style={{ cursor: "pointer" }}>Trending</a>
         </nav>
 
         <div className="ask-question-search">
@@ -117,40 +119,41 @@ function AskQuestion() {
 
           <div className="ask-question-menu">
 
-            <a href="/home">
+            <a onClick={() => navigate("/home")} style={{ cursor: "pointer" }}>
               <span>⌂</span>
               Home
             </a>
 
-            <a href="/questions">
+            <a onClick={() => navigate("/questions")} style={{ cursor: "pointer" }}>
               <span>⌕</span>
               Questions
             </a>
 
             <a
-              href="/ask-question"
+              onClick={() => navigate("/ask-question")}
               className="selected"
+              style={{ cursor: "pointer" }}
             >
               <span>⊕</span>
               Ask a Question
             </a>
 
-            <a href="/trending">
+            <a onClick={() => navigate("/trending")} style={{ cursor: "pointer" }}>
               <span>♨</span>
               Trending
             </a>
 
-            <a href="/bookmarks">
+            <a onClick={() => navigate("/bookmarks")} style={{ cursor: "pointer" }}>
               <span>♡</span>
               Bookmarks
             </a>
 
-            <a href="/my-answers">
+            <a onClick={() => navigate("/my-answers")} style={{ cursor: "pointer" }}>
               <span>▤</span>
               My Answers
             </a>
 
-            <a href="/profile">
+            <a onClick={() => navigate("/profile")} style={{ cursor: "pointer" }}>
               <span>♙</span>
               Profile
             </a>
