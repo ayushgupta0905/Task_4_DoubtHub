@@ -1,22 +1,66 @@
 import { useState } from "react";
 import girlWithBook from "../assets/girlwithbook.png";
+import SimilarQuestions from "./similarquestion";
+import "./similarquestion.css";
 
 function AskQuestion() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [showRecommendations, setShowRecommendations] = useState(false);
+
+  const recommendedQuestions = [
+    {
+      id: 1,
+      title: "How to fix 'Module not found' error in React?",
+      answers: 12,
+      time: "2 days ago",
+    },
+    {
+      id: 2,
+      title: "What is the difference between useState and useEffect in React?",
+      answers: 18,
+      time: "4 days ago",
+    },
+    {
+      id: 3,
+      title: "How to connect React frontend with Node.js backend?",
+      answers: 9,
+      time: "5 days ago",
+    },
+    {
+      id: 4,
+      title: "How to handle CORS errors in React with Express backend?",
+      answers: 15,
+      time: "1 week ago",
+    },
+    {
+      id: 5,
+      title: "Best folder structure for a React project?",
+      answers: 7,
+      time: "1 week ago",
+    },
+  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (
-      !title.trim() ||
-      !description.trim()
-    ) {
+    if (!title.trim() || !description.trim()) {
       alert("Please fill all required fields.");
       return;
     }
 
-    alert("Question posted successfully! Tags and category will be auto-assigned.");
+    alert(
+      "Question posted successfully! Tags and category will be auto-assigned."
+    );
+  };
+
+  const handleRecommend = () => {
+    if (!title.trim() && !description.trim()) {
+      alert("Please enter your question first.");
+      return;
+    }
+
+    setShowRecommendations(true);
   };
 
   return (
@@ -181,7 +225,10 @@ function AskQuestion() {
                   type="text"
                   value={title}
                   maxLength={150}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    setShowRecommendations(false);
+                  }}
                   placeholder="e.g. How to implement JWT authentication in Node.js?"
                 />
 
@@ -251,9 +298,10 @@ function AskQuestion() {
                   <textarea
                     value={description}
                     maxLength={2000}
-                    onChange={(e) =>
-                      setDescription(e.target.value)
-                    }
+                    onChange={(e) => {
+                      setDescription(e.target.value);
+                      setShowRecommendations(false);
+                    }}
                     placeholder="Provide more details about your question..."
                   />
 
@@ -265,8 +313,17 @@ function AskQuestion() {
 
               </div>
 
+
               {/* Bottom Actions */}
               <div className="ask-question-actions">
+
+                <button
+                  type="button"
+                  className="recommend-button"
+                  onClick={handleRecommend}
+                >
+                  ✦ &nbsp; Recommend
+                </button>
 
                 <button
                   type="button"
@@ -287,6 +344,14 @@ function AskQuestion() {
             </form>
 
           </div>
+
+
+          {/* Recommended Questions */}
+          {showRecommendations && (
+            <SimilarQuestions
+              questions={recommendedQuestions}
+            />
+          )}
 
         </main>
 
@@ -328,7 +393,6 @@ function AskQuestion() {
               <li>
                 Specify the expected output
               </li>
-
 
               <li>
                 Be respectful and follow community guidelines

@@ -1,32 +1,38 @@
-const API_URL = "http://localhost:8000/api";
+const API_URL = "http://192.168.1.105:8000/api";
 
 // =========================
 // LOGIN API
 // =========================
 
 export const loginUser = async (email, password, domain) => {
-  const response = await fetch(`${API_URL}/auth/login`, {
-    method: "POST",
+  let response;
+  try {
+    response = await fetch(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password,
+        domain: domain,
+      }),
+    });
+  } catch (err) {
+    if (err instanceof TypeError && err.message.includes("fetch")) {
+      throw new Error(
+        `Failed to connect to backend server at ${API_URL}. Please check your network connection, ensure the backend is running, and verify CORS configuration.`
+      );
+    }
+    throw err;
+  }
 
-    headers: {
-      "Content-Type": "application/json",
-    },
-
-    body: JSON.stringify({
-      email: email,
-      password: password,
-      domain: domain,
-    }),
-  });
-
-  const data = await response.json();
+  const data = await response.json().catch(() => null);
 
   if (!response.ok) {
     throw new Error(
-      data.message ||
-      data.detail ||
-      data.error ||
-      "Login failed"
+      (data && (data.message || data.detail || data.error)) ||
+      `Login failed with status ${response.status}`
     );
   }
 

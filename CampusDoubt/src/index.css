@@ -10288,8 +10288,6 @@ margin-right: 20px;
   }
 
 }
-
-
 /* =========================
    SMALL MOBILE
 ========================= */
@@ -10379,4 +10377,62 @@ margin-right: 20px;
     min-width: 0;
   }
 
+}
+
+
+
+
+
+
+
+/* ================================
+   RECOMMEND BUTTON askq
+================================ */
+
+.ask-question-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.recommend-button {
+  height: 48px;
+  padding: 0 24px;
+
+  border: 1px solid #e5a400;
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #d89400;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.recommend-button:hover {
+  background: #fff8df;
+  transform: translateY(-1px);
+}
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (max-width: 600px) {
+  .ask-question-actions {
+    flex-wrap: wrap;
+  }
+
+  .recommend-button,
+  .preview-question-button,
+  .post-question-button {
+    flex: 1;
+    min-width: 140px;
+  }
 }

@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/home";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
-import ForgotPassword from "./pages/forgotpassword";
 import Questions from "./pages/question";
 import QuestionDetail from "./pages/questiondetail";
 import AskQuestion from "./pages/askquestion";
@@ -12,22 +11,35 @@ import Bookmarks from "./pages/bookmarks";
 import MyAnswers from "./pages/myanswer";
 import SearchResults from "./pages/searchresults";
 import Categories from "./pages/categories";
-// import similarquestion from "./pages/similarquestion";
+import SimilarQuestion from "./pages/similarquestion";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-        <Route path="/" element={<Home />} />
+        {/* Home */}
+        <Route
+          path="/"
+          element={<Home />}
+        />
 
-        <Route path="/login" element={<Login />} />
+        {/* Authentication */}
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-        <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/signup"
+          element={<Signup />}
+        />
 
-        <Route path="/forgotpassword" element={<ForgotPassword />} />
-
-        <Route path="/question" element={<Questions />} />
+        {/* Questions */}
+        <Route
+          path="/question"
+          element={<Questions />}
+        />
 
         <Route
           path="/questiondetail"
@@ -35,10 +47,17 @@ function App() {
         />
 
         <Route
+          path="/similarquestion"
+          element={<SimilarQuestion />}
+        />
+
+        {/* Ask Question */}
+        <Route
           path="/askquestion"
           element={<AskQuestion />}
         />
 
+        {/* User */}
         <Route
           path="/profile"
           element={<Profile />}
@@ -50,24 +69,21 @@ function App() {
         />
 
         <Route
-          path="/myanswer"
+          path="/myanswers"
           element={<MyAnswers />}
         />
 
+        {/* Search */}
         <Route
           path="/searchresults"
           element={<SearchResults />}
         />
 
+        {/* Categories */}
         <Route
           path="/categories"
           element={<Categories />}
         />
-
-        {/* <Route
-          path="/similar-questions"
-          element={<similarquestion />}
-        /> */}
 
       </Routes>
     </BrowserRouter>
