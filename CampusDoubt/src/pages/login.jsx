@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import yellowBackground from "../assets/yellowbackground.png";
 import studentPhoto from "../assets/studentphoto.png";
@@ -10,16 +10,27 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [domain, setDomain] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Restore remembered email on mount if previously saved
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("remembered_email");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     setError("");
 
-    if (!email || !password || !domain) {
+    if (!email.trim() || !password || !domain) {
       setError("Please fill all the fields.");
       return;
     }
@@ -27,34 +38,35 @@ function Login() {
     try {
       setLoading(true);
 
-      const data = await loginUser(email, password, domain);
+      const data = await loginUser(email.trim(), password, domain);
 
       console.log("Login successful:", data);
 
-      // Save access token
-      if (data.access) {
-        localStorage.setItem("access_token", data.access);
+      // Save authentication token returned by backend
+      const token = data.token || data.access || data.accessToken;
+      if (token) {
+        localStorage.setItem("token", token);
+        localStorage.setItem("access_token", token);
       }
 
-      // Save refresh token
-      if (data.refresh) {
-        localStorage.setItem("refresh_token", data.refresh);
-      }
-
-      // If backend returns a normal token
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-
-      // Save user information
+      // Save user data if backend returns user data
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
       // Save selected domain
-      localStorage.setItem("domain", domain);
+      if (domain) {
+        localStorage.setItem("domain", domain);
+      }
 
-      // Login successful
+      // Remember me preference
+      if (rememberMe) {
+        localStorage.setItem("remembered_email", email.trim());
+      } else {
+        localStorage.removeItem("remembered_email");
+      }
+
+      // Navigate to existing Home page after successful login
       navigate("/");
 
     } catch (err) {
@@ -152,13 +164,16 @@ function Login() {
                 <span>🔒</span>
 
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
 
-                <span className="password-icon">
+                <span
+                  className="password-icon"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                >
                   ◉
                 </span>
               </div>
@@ -228,7 +243,11 @@ function Login() {
             {/* Options */}
             <div className="login-options">
               <label className="remember">
-                <input type="checkbox" />
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
                 <span>Remember me</span>
               </label>
 

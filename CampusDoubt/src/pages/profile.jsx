@@ -141,12 +141,6 @@ function Profile() {
               <span>♙</span>
               Profile
             </a>
-
-            <a href="#">
-              <span>⚙</span>
-              Settings
-            </a>
-
           </div>
 
 
