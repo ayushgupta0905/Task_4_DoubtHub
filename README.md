@@ -184,3 +184,5 @@ smart-college-doubt-platform/
 ├── .gitignore                  # Ignore node_modules, .env, and large datasets
 └── README.md                   # The project overview documentation
 ```
+
+## ML model deployed link : https://task-4-doubthub.onrender.com/docs
