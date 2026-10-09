@@ -1,16 +1,15 @@
-
 const mongoose = require("mongoose");
-
-const domains = [
+const domain = [
+    "Backend",
+    "Frontend",
     "AI/ML",
     "DSA",
     "Python",
-    "Frontend",
-    "Backend",
     "Cyber Security",
     "Machine Learning"
 ];
 
+// User Schema
 const userSchema = new mongoose.Schema(
     {
         name: {
@@ -18,7 +17,6 @@ const userSchema = new mongoose.Schema(
             required: true,
             trim: true
         },
-
         email: {
             type: String,
             required: true,
@@ -26,50 +24,39 @@ const userSchema = new mongoose.Schema(
             lowercase: true,
             trim: true
         },
-
         password: {
             type: String,
             required: true
         },
-
-        points: {
-            type: Number,
-            default: 0
-        },
-
         college: {
             type: String,
-            required: true,
-            trim: true
+            required: true
         },
-
         branch: {
             type: String,
-            required: true,
-            trim: true
+            required: true
         },
-
         year: {
             type: String,
             required: true
         },
-
         graduationYear: {
-            type: String,
+            type: Number,
             required: true
         },
-
         domain: {
             type: String,
-            required: true,
-            enum: domains
+            enum: domain,
+            required: true
         },
-
+        points: {
+            type: Number,
+            default: 0
+        },
         otp: {
             type: String,
             default: null
         },
-
         otpExpires: {
             type: Date,
             default: null

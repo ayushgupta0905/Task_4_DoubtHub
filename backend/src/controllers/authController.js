@@ -1,4 +1,3 @@
-
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
@@ -20,15 +19,9 @@ const signup = async (req, res) => {
         } = req.body;
 
         if (
-            !name ||
-            !email ||
-            !college ||
-            !branch ||
-            !password ||
-            !confirmPassword ||
-            !year ||
-            !graduationYear ||
-            !domain
+            !name || !email || !college || !branch ||
+            !password || !confirmPassword || !year ||
+            !graduationYear || !domain
         ) {
             return res.status(400).json({
                 message: "All fields are required"
@@ -73,7 +66,6 @@ const signup = async (req, res) => {
             await sendEmail(normalizedEmail, otp);
         } catch (emailError) {
             await User.findByIdAndDelete(user._id);
-
             console.error("OTP email error:", emailError);
 
             return res.status(500).json({
@@ -84,16 +76,14 @@ const signup = async (req, res) => {
         return res.status(201).json({
             message: "OTP sent to your email. Verify it to complete signup."
         });
-
     } catch (error) {
-        console.error(error);
+        console.error("Signup error:", error);
 
         return res.status(500).json({
             message: "Server error"
         });
     }
 };
-
 
 const verifyOTP = async (req, res) => {
     try {
@@ -154,16 +144,14 @@ const verifyOTP = async (req, res) => {
                 domain: user.domain
             }
         });
-
     } catch (error) {
-        console.error(error);
+        console.error("OTP verification error:", error);
 
         return res.status(500).json({
             message: "Server error"
         });
     }
 };
-
 
 const login = async (req, res) => {
     try {
@@ -185,7 +173,6 @@ const login = async (req, res) => {
             });
         }
 
-        // OTP pending hone par login allow mat karo.
         if (user.otp && user.otpExpires) {
             return res.status(403).json({
                 message: "Please verify your email OTP before logging in"
@@ -226,9 +213,8 @@ const login = async (req, res) => {
                 points: user.points
             }
         });
-
     } catch (error) {
-        console.error(error);
+        console.error("Login error:", error);
 
         return res.status(500).json({
             message: "Server error"
@@ -236,13 +222,11 @@ const login = async (req, res) => {
     }
 };
 
-
 const getProfile = async (req, res) => {
     return res.status(200).json({
         user: req.user
     });
 };
-
 
 module.exports = {
     signup,
@@ -250,4 +234,3 @@ module.exports = {
     login,
     getProfile
 };
-
