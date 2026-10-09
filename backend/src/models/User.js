@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const domains = [
@@ -7,8 +8,7 @@ const domains = [
     "Frontend",
     "Backend",
     "Cyber Security",
-    "Machine Learning",
-    
+    "Machine Learning"
 ];
 
 const userSchema = new mongoose.Schema(
@@ -37,7 +37,6 @@ const userSchema = new mongoose.Schema(
             default: 0
         },
 
-
         college: {
             type: String,
             required: true,
@@ -64,6 +63,16 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true,
             enum: domains
+        },
+
+        otp: {
+            type: String,
+            default: null
+        },
+
+        otpExpires: {
+            type: Date,
+            default: null
         }
     },
     {
@@ -72,3 +81,4 @@ const userSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("User", userSchema);
+
