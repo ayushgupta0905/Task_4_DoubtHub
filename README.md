@@ -140,7 +140,6 @@ The **Smart College Doubt Solving Platform** integrates an intelligent ML layer 
 
 This project is developed by team **Gradient Descenders** for the final probation task evaluation.
 
-## Expected file structure
 
 ## Expected File Structure
 
