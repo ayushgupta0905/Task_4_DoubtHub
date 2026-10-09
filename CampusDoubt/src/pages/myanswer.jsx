@@ -1,525 +1,254 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-
-import girlWithBook from "../assets/girlwithbook.png";
-import yellowBackground from "../assets/yellowbackground.png";
-import studentPhoto from "../assets/studentphoto.png";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import { getMyAnswers, deleteAnswer, getAuthToken } from "../api/api";
 
 function MyAnswers() {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("All Answers");
-  const [tag, setTag] = useState("All Tags");
-  const [activeTab, setActiveTab] = useState("All Answers");
+  const navigate = useNavigate();
+  const token = getAuthToken();
+  const [answers, setAnswers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState("all");
 
-  const answers = [
-    {
-      id: 1,
-      title: "How does React's useEffect hook work?",
-      answer:
-        "useEffect is a React hook that lets you perform side effects in functional components. It runs after the component renders and can be used for...",
-      votes: 12,
-      comments: 8,
-      tags: ["react", "javascript", "frontend"],
-      date: "Oct 5, 2026",
-      status: "Accepted",
-    },
-    {
-      id: 2,
-      title: "What is the difference between let, const and var?",
-      answer:
-        "The main differences are scope, hoisting, and re-assignment. var is function scoped, let and const are block scoped. const cannot...",
-      votes: 5,
-      comments: 4,
-      tags: ["javascript", "web-development", "basics"],
-      date: "Oct 3, 2026",
-      status: "Not Accepted",
-    },
-    {
-      id: 3,
-      title: "How to connect React frontend with Node.js backend?",
-      answer:
-        "You can connect React with Node.js using REST APIs. In React, use fetch or axios to make API calls to your Express backend. Make sure CORS is...",
-      votes: 18,
-      comments: 12,
-      tags: ["react", "nodejs", "api", "express"],
-      date: "Sep 28, 2026",
-      status: "Accepted",
-    },
-    {
-      id: 4,
-      title: "What are the main features of Java 17?",
-      answer:
-        "Java 17 is an LTS version and includes features like sealed classes, pattern matching, records, switch expressions, and improved performance...",
-      votes: 7,
-      comments: 3,
-      tags: ["java", "oop", "programming"],
-      date: "Sep 25, 2026",
-      status: "Not Accepted",
-    },
-    {
-      id: 5,
-      title: "How to prepare for DSA in college?",
-      answer:
-        "Start with basic data structures like arrays, strings and linked lists, then move to recursion, sorting, searching, trees and graphs. Practice regularly...",
-      votes: 3,
-      comments: 6,
-      tags: ["dsa", "placement", "coding"],
-      date: "Sep 20, 2026",
-      status: "Not Accepted",
-    },
-  ];
+  const loadAnswers = async () => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      const res = await getMyAnswers();
+      setAnswers(res?.answers || []);
+    } catch (err) {
+      setError(err.message || "Failed to load your answers.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredAnswers = answers.filter((item) => {
-    const matchesSearch =
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      item.answer.toLowerCase().includes(search.toLowerCase()) ||
-      item.tags.some((itemTag) =>
-        itemTag.toLowerCase().includes(search.toLowerCase())
-      );
+  useEffect(() => {
+    loadAnswers();
+  }, [token]);
 
-    const matchesStatus =
-      status === "All Answers" || item.status === status;
+  const handleDelete = async (e, ansId) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this answer?")) return;
 
-    const matchesTag =
-      tag === "All Tags" || item.tags.includes(tag);
+    try {
+      await deleteAnswer(ansId);
+      setAnswers((prev) => prev.filter((a) => a._id !== ansId));
+    } catch (err) {
+      alert("Failed to delete answer: " + err.message);
+    }
+  };
 
-    const matchesTab =
-      activeTab === "All Answers" ||
-      (activeTab === "Accepted" && item.status === "Accepted") ||
-      (activeTab === "Not Accepted" &&
-        item.status === "Not Accepted");
-
+  if (!token) {
     return (
-      matchesSearch &&
-      matchesStatus &&
-      matchesTag &&
-      matchesTab
+      <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
+        <Navbar />
+        <div style={{ maxWidth: "500px", margin: "80px auto", textAlign: "center", padding: "0 20px" }}>
+          <div style={{ fontSize: "48px", marginBottom: "16px" }}>💬</div>
+          <h2>Please Login to View Your Answers</h2>
+          <button
+            onClick={() => navigate("/login")}
+            style={{
+              marginTop: "16px",
+              backgroundColor: "#f59e0b",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "8px",
+              padding: "10px 20px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+          >
+            Login to Account
+          </button>
+        </div>
+      </div>
     );
+  }
+
+  const filtered = answers.filter((a) => {
+    if (filter === "accepted") return a.isAccepted;
+    return true;
   });
 
   return (
-    <div
-      className="my-answers-page"
-      style={{
-        backgroundImage: `
-          linear-gradient(
-            rgba(255, 255, 255, 0.88),
-            rgba(255, 255, 255, 0.88)
-          ),
-          url(${yellowBackground})
-        `,
-      }}
-    >
-      {/* ================= NAVBAR ================= */}
+    <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
+      <Navbar />
 
-      <header className="my-answers-navbar">
-
-        <div className="my-answers-logo">
-          <span>Smart</span>College
-        </div>
-
-        <nav className="my-answers-nav">
-          <Link to="/home">Home</Link>
-          <Link to="/questions">Questions</Link>
-          <Link to="/categories">Categories</Link>
-          <Link to="/ask-question">Ask Question</Link>
-        </nav>
-
-        <div className="my-answers-top-search">
-          <span>⌕</span>
-
-          <input
-            type="text"
-            placeholder="Search questions, topics, or users..."
-          />
-        </div>
-
-        <button className="my-answers-notification">
-          ♧
-        </button>
-
-        <Link
-          to="/profile"
-          className="my-answers-user"
-        >
-          <img
-            src={studentPhoto}
-            alt="Priya"
-          />
-
-          <span>Priya</span>
-
-          <span>⌄</span>
-        </Link>
-
-      </header>
-
-
-      {/* ================= PAGE LAYOUT ================= */}
-
-      <div className="my-answers-layout">
-
-        {/* ================= SIDEBAR ================= */}
-
-        <aside className="my-answers-sidebar">
-
-          <div className="my-answers-menu">
-
-            <Link to="/home">
-              <span>⌂</span>
-              Home
-            </Link>
-
-            <Link to="/questions">
-              <span>▤</span>
-              Questions
-            </Link>
-
-            <Link to="/ask-question">
-              <span>＋</span>
-              Ask Question
-            </Link>
-
-            <Link
-              to="/my-answers"
-              className="active"
-            >
-              <span>☷</span>
-              My Answers
-            </Link>
-
-            <Link to="/bookmarks">
-              <span>🔖</span>
-              Bookmarks
-            </Link>
-
-            <Link to="/categories">
-              <span>▦</span>
-              Categories
-            </Link>
-
-            <Link to="/trending">
-              <span>▥</span>
-              Trending
-            </Link>
-
-            <Link to="/profile">
-              <span>♙</span>
-              Profile
-            </Link>
-
-          </div>
-
-
-          {/* Need Help */}
-
-          <div className="my-answers-help-card">
-
-            <div className="my-answers-help-content">
-
-              <h2>
-                Need Help
-                <br />
-                with a Question?
-              </h2>
-
-              <p>
-                Ask the community and get
-                answers from fellow students!
-              </p>
-
-              <Link to="/ask-question">
-                Ask a Question →
-              </Link>
-
-            </div>
-
-            <img
-              src={girlWithBook}
-              alt="Student asking a question"
-              className="my-answers-help-image"
-            />
-
-          </div>
-
-        </aside>
-
-
-        {/* ================= MAIN ================= */}
-
-        <main className="my-answers-main">
-
-          <div className="my-answers-heading">
-
-            <h1>My Answers</h1>
-
-            <p>
-              View and manage all the answers you
-              have posted on SmartCollege.
+      <div style={{ maxWidth: "1100px", margin: "32px auto", padding: "0 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+          <div>
+            <h1 style={{ fontSize: "26px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+              My Posted Answers
+            </h1>
+            <p style={{ color: "#64748b", fontSize: "14px", margin: "4px 0 0" }}>
+              Answers you have contributed to help campus peers.
             </p>
-
           </div>
 
-
-          {/* ================= TABS ================= */}
-
-          <div className="my-answers-controls">
-
-            <div className="my-answers-tabs">
-
-              <button
-                className={
-                  activeTab === "All Answers"
-                    ? "active"
-                    : ""
-                }
-                onClick={() =>
-                  setActiveTab("All Answers")
-                }
-              >
-                All Answers (12)
-              </button>
-
-              <button
-                className={
-                  activeTab === "Accepted"
-                    ? "active"
-                    : ""
-                }
-                onClick={() =>
-                  setActiveTab("Accepted")
-                }
-              >
-                Accepted (5)
-              </button>
-
-              <button
-                className={
-                  activeTab === "Not Accepted"
-                    ? "active"
-                    : ""
-                }
-                onClick={() =>
-                  setActiveTab("Not Accepted")
-                }
-              >
-                Not Accepted (7)
-              </button>
-
-            </div>
-
-            <select className="my-answers-sort">
-              <option>Newest First</option>
-              <option>Oldest First</option>
-              <option>Most Votes</option>
-            </select>
-
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              onClick={() => setFilter("all")}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "8px",
+                border: filter === "all" ? "1px solid #f59e0b" : "1px solid #cbd5e1",
+                backgroundColor: filter === "all" ? "#fef3c7" : "#ffffff",
+                color: filter === "all" ? "#b45309" : "#475569",
+                fontSize: "13px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+            >
+              All ({answers.length})
+            </button>
+            <button
+              onClick={() => setFilter("accepted")}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "8px",
+                border: filter === "accepted" ? "1px solid #22c55e" : "1px solid #cbd5e1",
+                backgroundColor: filter === "accepted" ? "#dcfce7" : "#ffffff",
+                color: filter === "accepted" ? "#166534" : "#475569",
+                fontSize: "13px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+            >
+              Accepted Solutions ({answers.filter((a) => a.isAccepted).length})
+            </button>
           </div>
+        </div>
 
+        {error && (
+          <div style={{ backgroundColor: "#fee2e2", color: "#b91c1c", padding: "12px", borderRadius: "8px", marginBottom: "20px" }}>
+            ⚠️ {error}
+          </div>
+        )}
 
-          {/* ================= ANSWERS ================= */}
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "60px 0", color: "#64748b" }}>
+            Loading your answers...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "14px",
+              padding: "60px 20px",
+              textAlign: "center",
+              border: "1px dashed #cbd5e1",
+            }}
+          >
+            <span style={{ fontSize: "40px" }}>✍️</span>
+            <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#0f172a", margin: "12px 0 6px" }}>
+              No answers posted yet
+            </h3>
+            <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "16px" }}>
+              Browse the campus questions feed to answer doubts and earn reputation points!
+            </p>
+            <button
+              onClick={() => navigate("/question")}
+              style={{
+                backgroundColor: "#f59e0b",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "10px 18px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+            >
+              Browse Questions Feed
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {filtered.map((ans) => {
+              const q = ans.queryId;
+              const qId = q?._id || ans.queryId;
 
-          <div className="my-answers-list">
-
-            {filteredAnswers.length === 0 ? (
-
-              <div className="my-answers-empty">
-
-                <div>☷</div>
-
-                <h2>No answers found</h2>
-
-                <p>
-                  Try changing your search or filters.
-                </p>
-
-              </div>
-
-            ) : (
-
-              filteredAnswers.map((item) => (
-
-                <article
-                  className="my-answer-card"
-                  key={item.id}
+              return (
+                <div
+                  key={ans._id}
+                  onClick={() => {
+                    if (qId) navigate(`/questiondetail?id=${qId}`);
+                  }}
+                  style={{
+                    backgroundColor: "#ffffff",
+                    borderRadius: "14px",
+                    padding: "22px 26px",
+                    border: ans.isAccepted ? "2px solid #22c55e" : "1px solid #e2e8f0",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                    cursor: "pointer",
+                  }}
                 >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                    <div>
+                      <span style={{ fontSize: "12px", color: "#64748b" }}>Doubt:</span>
+                      <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#0284c7", margin: "2px 0 0" }}>
+                        {q?.title || "View Question Details →"}
+                      </h3>
+                    </div>
 
-                  {/* Votes */}
-
-                  <div className="my-answer-votes">
-
-                    <button>⌃</button>
-
-                    <strong>
-                      {item.votes}
-                    </strong>
-
-                    <button>⌄</button>
-
-                  </div>
-
-
-                  {/* Content */}
-
-                  <div className="my-answer-content">
-
-                    <Link
-                      to="/question-detail"
-                      className="my-answer-title"
-                    >
-                      {item.title}
-                    </Link>
-
-                    <p className="my-answer-text">
-                      {item.answer}
-                    </p>
-
-
-                    {/* Tags */}
-
-                    <div className="my-answer-tags">
-
-                      {item.tags.map((itemTag) => (
-
-                        <span key={itemTag}>
-                          {itemTag}
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      {ans.isAccepted && (
+                        <span
+                          style={{
+                            backgroundColor: "#dcfce7",
+                            color: "#166534",
+                            padding: "3px 10px",
+                            borderRadius: "999px",
+                            fontSize: "12px",
+                            fontWeight: "700",
+                          }}
+                        >
+                          ✓ Accepted Solution
                         </span>
+                      )}
 
-                      ))}
-
+                      <button
+                        onClick={(e) => handleDelete(e, ans._id)}
+                        style={{
+                          backgroundColor: "transparent",
+                          color: "#ef4444",
+                          border: "1px solid #fca5a5",
+                          borderRadius: "6px",
+                          padding: "4px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Delete
+                      </button>
                     </div>
-
                   </div>
 
+                  <p
+                    style={{
+                      color: "#334155",
+                      fontSize: "14px",
+                      lineHeight: "1.7",
+                      whiteSpace: "pre-wrap",
+                      margin: "0 0 12px 0",
+                    }}
+                  >
+                    "{ans.content}"
+                  </p>
 
-                  {/* Right Info */}
-
-                  <div className="my-answer-info">
-
-                    {item.status === "Accepted" && (
-
-                      <span className="accepted-answer">
-                        ✓ Accepted Answer
-                      </span>
-
-                    )}
-
-                    <div className="my-answer-comments">
-                      <span>▢</span>
-                      <span>{item.comments}</span>
-                    </div>
-
-                    <span className="my-answer-date">
-                      {item.date}
-                    </span>
-
+                  <div style={{ fontSize: "12px", color: "#94a3b8" }}>
+                    Answered on {new Date(ans.createdAt).toLocaleDateString()}
                   </div>
-
-                </article>
-
-              ))
-
-            )}
-
+                </div>
+              );
+            })}
           </div>
-
-        </main>
-
-
-        {/* ================= RIGHT SIDEBAR ================= */}
-
-        <aside className="my-answers-right">
-
-          {/* Search */}
-
-          <section className="my-answers-filter-card">
-
-            <h2>Search my answers</h2>
-
-            <div className="my-answers-search-box">
-
-              <span>⌕</span>
-
-              <input
-                type="text"
-                placeholder="Search in your answers..."
-                value={search}
-                onChange={(e) =>
-                  setSearch(e.target.value)
-                }
-              />
-
-            </div>
-
-
-            <label>
-              Filter by status
-            </label>
-
-            <select
-              value={status}
-              onChange={(e) =>
-                setStatus(e.target.value)
-              }
-            >
-              <option>All Answers</option>
-              <option>Accepted</option>
-              <option>Not Accepted</option>
-            </select>
-
-
-            <label>
-              Filter by tag
-            </label>
-
-            <select
-              value={tag}
-              onChange={(e) =>
-                setTag(e.target.value)
-              }
-            >
-              <option>All Tags</option>
-              <option>react</option>
-              <option>javascript</option>
-              <option>nodejs</option>
-              <option>java</option>
-              <option>dsa</option>
-              <option>placement</option>
-            </select>
-
-          </section>
-
-
-          {/* Help card */}
-
-          <section className="my-answers-community-card">
-
-            <h2>
-              Need Help
-              <br />
-              with a Question?
-            </h2>
-
-            <p>
-              Ask the community and get
-              answers from fellow students!
-            </p>
-
-            <Link to="/ask-question">
-              Ask a Question →
-            </Link>
-
-            <img
-              src={girlWithBook}
-              alt="Student"
-            />
-
-          </section>
-
-        </aside>
-
+        )}
       </div>
-
     </div>
   );
 }

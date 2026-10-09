@@ -1,451 +1,398 @@
-import { useState } from "react";
-import girlWithBook from "../assets/girlwithbook.png";
-import SimilarQuestions from "./similarquestion";
-import "./similarquestion.css";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import {
+  createQuery,
+  predictDomain,
+  getMLRecommendations,
+  getAuthToken,
+} from "../api/api";
 
 function AskQuestion() {
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [showRecommendations, setShowRecommendations] = useState(false);
+  const [predictedDomain, setPredictedDomain] = useState("");
+  const [predicting, setPredicting] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const recommendedQuestions = [
-    {
-      id: 1,
-      title: "How to fix 'Module not found' error in React?",
-      answers: 12,
-      time: "2 days ago",
-    },
-    {
-      id: 2,
-      title: "What is the difference between useState and useEffect in React?",
-      answers: 18,
-      time: "4 days ago",
-    },
-    {
-      id: 3,
-      title: "How to connect React frontend with Node.js backend?",
-      answers: 9,
-      time: "5 days ago",
-    },
-    {
-      id: 4,
-      title: "How to handle CORS errors in React with Express backend?",
-      answers: 15,
-      time: "1 week ago",
-    },
-    {
-      id: 5,
-      title: "Best folder structure for a React project?",
-      answers: 7,
-      time: "1 week ago",
-    },
-  ];
+  // Check login status
+  const token = getAuthToken();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (!title.trim() || !description.trim()) {
-      alert("Please fill all required fields.");
+  // Auto predict domain with debounce when user types title and description
+  useEffect(() => {
+    const combined = `${title} ${description}`.trim();
+    if (combined.length < 5) {
+      setPredictedDomain("");
       return;
     }
 
-    alert(
-      "Question posted successfully! Tags and category will be auto-assigned."
-    );
+    const timer = setTimeout(async () => {
+      try {
+        setPredicting(true);
+        const domain = await predictDomain(combined);
+        setPredictedDomain(domain);
+      } catch {
+        // silent
+      } finally {
+        setPredicting(false);
+      }
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [title, description]);
+
+  // Fetch ML recommendations
+  const handleGetRecommendations = async () => {
+    const combined = `${title} ${description}`.trim();
+    if (!combined) {
+      setError("Please write a title or description first to find similar questions.");
+      return;
+    }
+
+    try {
+      setLoadingRecommendations(true);
+      setError("");
+      const recs = await getMLRecommendations(combined);
+      setRecommendations(recs);
+    } catch (err) {
+      setError(err.message || "Failed to load ML recommendations.");
+    } finally {
+      setLoadingRecommendations(false);
+    }
   };
 
-  const handleRecommend = () => {
-    if (!title.trim() && !description.trim()) {
-      alert("Please enter your question first.");
+  // Submit question
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!token) {
+      setError("You must be logged in to post a question. Please login first.");
+      setTimeout(() => navigate("/login"), 1500);
       return;
     }
 
-    setShowRecommendations(true);
+    if (!title.trim() || !description.trim()) {
+      setError("Please fill out both the title and detailed description.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const res = await createQuery({
+        title: title.trim(),
+        description: description.trim(),
+      });
+
+      setSuccess("Question posted successfully! Domain assigned by ML model.");
+      setTimeout(() => {
+        if (res?.query?._id) {
+          navigate(`/questiondetail?id=${res.query._id}`);
+        } else {
+          navigate("/question");
+        }
+      }, 1000);
+    } catch (err) {
+      setError(err.message || "Failed to post question. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="ask-question-page">
+    <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
+      <Navbar />
 
-      {/* Navbar */}
-      <header className="ask-question-navbar">
-
-        <div className="ask-question-logo">
-          🎓 <span>Smart</span> College
+      <div style={{ maxWidth: "1100px", margin: "32px auto", padding: "0 20px" }}>
+        {/* Header */}
+        <div style={{ marginBottom: "28px" }}>
+          <h1 style={{ fontSize: "28px", fontWeight: "800", color: "#0f172a", marginBottom: "8px" }}>
+            Ask a Public Doubt
+          </h1>
+          <p style={{ color: "#64748b", fontSize: "15px" }}>
+            Be specific and imagine you're asking a question to another student. Our AI/ML classifier will automatically tag your technical domain.
+          </p>
         </div>
 
-        <nav className="ask-question-nav">
-          <a href="/home">Home</a>
-          <a href="/questions">Questions</a>
-          <a href="#">Categories</a>
-          <a href="/trending">Trending</a>
-        </nav>
-
-        <div className="ask-question-search">
-          <span>⌕</span>
-
-          <input
-            type="text"
-            placeholder="Search questions, topics, or users..."
-          />
-        </div>
-
-        <button className="ask-question-top-button">
-          Ask Question
-        </button>
-
-        <div className="ask-question-notification">
-          ♧
-        </div>
-
-        <div className="ask-question-user">
-          <div className="ask-question-user-avatar">
-            P
-          </div>
-
-          <span>Priya</span>
-          <span>⌄</span>
-        </div>
-
-      </header>
-
-
-      {/* Main Layout */}
-      <div className="ask-question-layout">
-
-        {/* Left Sidebar */}
-        <aside className="ask-question-left-sidebar">
-
-          <div className="ask-question-menu">
-
-            <a href="/home">
-              <span>⌂</span>
-              Home
-            </a>
-
-            <a href="/questions">
-              <span>⌕</span>
-              Questions
-            </a>
-
-            <a
-              href="/ask-question"
-              className="selected"
-            >
-              <span>⊕</span>
-              Ask a Question
-            </a>
-
-            <a href="/trending">
-              <span>♨</span>
-              Trending
-            </a>
-
-            <a href="/bookmarks">
-              <span>♡</span>
-              Bookmarks
-            </a>
-
-            <a href="/my-answers">
-              <span>▤</span>
-              My Answers
-            </a>
-
-            <a href="/profile">
-              <span>♙</span>
-              Profile
-            </a>
-
-          </div>
-
-
-          {/* Need Help */}
-          <div className="ask-question-help-card">
-
-            <div className="ask-question-help-content">
-
-              <h2>Need Help?</h2>
-
-              <p>
-                Ask the community and get answers
-                from other college students.
-              </p>
-
-              <button>
-                Ask Question
-              </button>
-
-            </div>
-
-            <img
-              src={girlWithBook}
-              alt="Student with books"
-              className="ask-question-student-image"
-            />
-
-          </div>
-
-        </aside>
-
-
-        {/* Center Form */}
-        <main className="ask-question-main">
-
-          <div className="ask-question-card">
-
-            <div className="ask-question-heading">
-
-              <h1>Ask a Question</h1>
-
-              <p>
-                Get help from the Smart College community.
-                Be clear, detailed, and specific to get the best answers.
-              </p>
-
-            </div>
-
-
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "28px", alignItems: "start" }}>
+          {/* Main Form */}
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              padding: "32px",
+              borderRadius: "16px",
+              boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05)",
+              border: "1px solid #e2e8f0",
+            }}
+          >
             <form onSubmit={handleSubmit}>
-
-              {/* Title */}
-              <div className="ask-question-field">
-
-                <div className="ask-question-label-row">
-
-                  <label>
-                    Title <span>*</span>
-                  </label>
-
-                  <small>
-                    {title.length}/150
-                  </small>
-
-                </div>
-
+              {/* Title Input */}
+              <div style={{ marginBottom: "24px" }}>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "700", color: "#0f172a", marginBottom: "6px" }}>
+                  Title <span style={{ color: "#ef4444" }}>*</span>
+                </label>
+                <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>
+                  Be specific and imagine you are asking a question to another student.
+                </p>
                 <input
                   type="text"
+                  placeholder="e.g. How to implement JWT authentication in Node.js Express backend?"
                   value={title}
-                  maxLength={150}
-                  onChange={(e) => {
-                    setTitle(e.target.value);
-                    setShowRecommendations(false);
+                  onChange={(e) => setTitle(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    borderRadius: "10px",
+                    border: "1.5px solid #cbd5e1",
+                    fontSize: "15px",
+                    outline: "none",
+                    boxSizing: "border-box",
                   }}
-                  placeholder="e.g. How to implement JWT authentication in Node.js?"
+                  required
                 />
-
-                <p className="field-help">
-                  Be specific and clear about your question.
-                </p>
-
               </div>
 
-
-              {/* Description */}
-              <div className="ask-question-field">
-
-                <label>
-                  Description <span>*</span>
+              {/* Description Input */}
+              <div style={{ marginBottom: "24px" }}>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "700", color: "#0f172a", marginBottom: "6px" }}>
+                  Detailed Description <span style={{ color: "#ef4444" }}>*</span>
                 </label>
-
-                <div className="description-editor">
-
-                  <div className="editor-toolbar">
-
-                    <select defaultValue="normal">
-                      <option value="normal">
-                        Normal
-                      </option>
-
-                      <option value="heading">
-                        Heading
-                      </option>
-                    </select>
-
-                    <button type="button">
-                      <strong>B</strong>
-                    </button>
-
-                    <button type="button">
-                      <em>I</em>
-                    </button>
-
-                    <button type="button">
-                      <u>U</u>
-                    </button>
-
-                    <span className="toolbar-divider"></span>
-
-                    <button type="button">
-                      ☷
-                    </button>
-
-                    <button type="button">
-                      ≡
-                    </button>
-
-                    <span className="toolbar-divider"></span>
-
-                    <button type="button">
-                      🔗
-                    </button>
-
-                    <button type="button">
-                      &lt;/&gt;
-                    </button>
-
-                  </div>
-
-
-                  <textarea
-                    value={description}
-                    maxLength={2000}
-                    onChange={(e) => {
-                      setDescription(e.target.value);
-                      setShowRecommendations(false);
-                    }}
-                    placeholder="Provide more details about your question..."
-                  />
-
-                </div>
-
-                <div className="description-counter">
-                  {description.length}/2000
-                </div>
-
+                <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>
+                  Introduce the problem, share what code you tried, error messages, and expected outcome.
+                </p>
+                <textarea
+                  rows={8}
+                  placeholder="Explain your doubt in detail. Include any relevant error messages or code snippets..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "14px 16px",
+                    borderRadius: "10px",
+                    border: "1.5px solid #cbd5e1",
+                    fontSize: "14px",
+                    lineHeight: "1.6",
+                    outline: "none",
+                    boxSizing: "border-box",
+                    fontFamily: "inherit",
+                    resize: "vertical",
+                  }}
+                  required
+                />
               </div>
 
-
-              {/* Bottom Actions */}
-              <div className="ask-question-actions">
+              {/* ML Domain Prediction Badge */}
+              <div
+                style={{
+                  padding: "14px 18px",
+                  borderRadius: "12px",
+                  backgroundColor: "#f0fdf4",
+                  border: "1px solid #bbf7d0",
+                  marginBottom: "24px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "18px" }}>🤖</span>
+                    <strong style={{ fontSize: "14px", color: "#166534" }}>
+                      AI/ML Model 1 (Domain Classifier):
+                    </strong>
+                  </div>
+                  <span style={{ fontSize: "12px", color: "#15803d" }}>
+                    {predicting
+                      ? "Analyzing text and predicting domain..."
+                      : predictedDomain
+                      ? `Classified into: `
+                      : "Type your query above to see live ML prediction."}
+                  </span>
+                  {predictedDomain && !predicting && (
+                    <span
+                      style={{
+                        marginLeft: "6px",
+                        backgroundColor: "#166534",
+                        color: "#ffffff",
+                        padding: "2px 8px",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        fontWeight: "700",
+                      }}
+                    >
+                      {predictedDomain}
+                    </span>
+                  )}
+                </div>
 
                 <button
                   type="button"
-                  className="recommend-button"
-                  onClick={handleRecommend}
+                  onClick={handleGetRecommendations}
+                  disabled={loadingRecommendations}
+                  style={{
+                    backgroundColor: "#0284c7",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "8px 14px",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
                 >
-                  ✦ &nbsp; Recommend
+                  {loadingRecommendations ? "Searching..." : "🔍 Check Similar (ML)"}
                 </button>
+              </div>
 
-                <button
-                  type="button"
-                  className="preview-question-button"
+              {/* Error & Success */}
+              {error && (
+                <div
+                  style={{
+                    backgroundColor: "#fee2e2",
+                    color: "#b91c1c",
+                    padding: "12px 16px",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    marginBottom: "20px",
+                    fontWeight: "500",
+                  }}
                 >
-                  ◉ &nbsp; Preview
-                </button>
+                  ⚠️ {error}
+                </div>
+              )}
 
+              {success && (
+                <div
+                  style={{
+                    backgroundColor: "#dcfce7",
+                    color: "#15803d",
+                    padding: "12px 16px",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    marginBottom: "20px",
+                    fontWeight: "500",
+                  }}
+                >
+                  ✓ {success}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                 <button
                   type="submit"
-                  className="post-question-button"
+                  disabled={submitting}
+                  style={{
+                    backgroundColor: "#f59e0b",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "10px",
+                    padding: "14px 28px",
+                    fontSize: "15px",
+                    fontWeight: "700",
+                    cursor: submitting ? "not-allowed" : "pointer",
+                    boxShadow: "0 4px 12px rgba(245, 158, 11, 0.3)",
+                  }}
                 >
-                  ➤ &nbsp; Post Question
+                  {submitting ? "Posting Doubt..." : "Publish Doubt 🚀"}
                 </button>
 
+                <button
+                  type="button"
+                  onClick={() => navigate("/question")}
+                  style={{
+                    backgroundColor: "transparent",
+                    color: "#64748b",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "10px",
+                    padding: "13px 20px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
               </div>
-
             </form>
-
           </div>
 
+          {/* Right Sidebar Tips & ML Recommendations */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            {/* ML Recommendations Card */}
+            {recommendations.length > 0 && (
+              <div
+                style={{
+                  backgroundColor: "#ffffff",
+                  padding: "20px",
+                  borderRadius: "16px",
+                  border: "1px solid #e0f2fe",
+                  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                  <span>🎯</span>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#0369a1", margin: 0 }}>
+                    Similar Doubts (Model 2)
+                  </h3>
+                </div>
+                <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "12px" }}>
+                  Check these similar questions before posting, they might already have the answer you need:
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {recommendations.map((rec, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: "10px 12px",
+                        backgroundColor: "#f0f9ff",
+                        borderRadius: "8px",
+                        fontSize: "13px",
+                        color: "#0369a1",
+                        border: "1px solid #bae6fd",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => {
+                        navigate(`/searchresults?q=${encodeURIComponent(rec)}`);
+                      }}
+                    >
+                      • {rec}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {/* Recommended Questions */}
-          {showRecommendations && (
-            <SimilarQuestions
-              questions={recommendedQuestions}
-            />
-          )}
-
-        </main>
-
-
-        {/* Right Sidebar */}
-        <aside className="ask-question-right-sidebar">
-
-          {/* Tips */}
-          <div className="ask-question-right-card">
-
-            <div className="right-card-title yellow-title">
-
-              <span>💡</span>
-
-              <h2>
-                Tips for a Good Question
-              </h2>
-
+            {/* Writing Good Questions Tips */}
+            <div
+              style={{
+                backgroundColor: "#ffffff",
+                padding: "24px",
+                borderRadius: "16px",
+                border: "1px solid #e2e8f0",
+                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+              }}
+            >
+              <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#0f172a", marginBottom: "14px" }}>
+                💡 Tips for Getting Quick Answers
+              </h3>
+              <ul style={{ paddingLeft: "18px", margin: 0, fontSize: "13px", color: "#475569", lineHeight: "1.8" }}>
+                <li>Summarize the specific problem in the title</li>
+                <li>Describe what you expected vs what happened</li>
+                <li>Include code snippets or stack traces</li>
+                <li>Keep code brief and reproducible</li>
+                <li>AI/ML classifier will tag the domain automatically</li>
+              </ul>
             </div>
-
-            <ul className="tips-list">
-
-              <li>
-                Be clear and specific
-              </li>
-
-              <li>
-                Provide enough context
-              </li>
-
-              <li>
-                Include relevant code snippets
-              </li>
-
-              <li>
-                Mention what you have tried
-              </li>
-
-              <li>
-                Specify the expected output
-              </li>
-
-              <li>
-                Be respectful and follow community guidelines
-              </li>
-
-            </ul>
-
           </div>
-
-
-          {/* Community Guidelines */}
-          <div className="ask-question-right-card">
-
-            <div className="right-card-title yellow-title">
-
-              <span>📖</span>
-
-              <h2>
-                Community Guidelines
-              </h2>
-
-            </div>
-
-            <ul className="guidelines-list">
-
-              <li>
-                Search existing questions first
-              </li>
-
-              <li>
-                Be respectful and kind
-              </li>
-
-              <li>
-                Ask one question at a time
-              </li>
-
-              <li>
-                Provide meaningful details
-              </li>
-
-              <li>
-                Follow our code of conduct
-              </li>
-
-            </ul>
-
-          </div>
-
-        </aside>
-
+        </div>
       </div>
-
     </div>
   );
 }

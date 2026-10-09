@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import yellowBackground from "../assets/yellowbackground.png";
 import studentPhoto from "../assets/studentphoto.png";
+import { sendOtp, verifyOtp } from "../api/api";
+import OtpModal from "../components/OtpModal";
 
 function ForgotPassword() {
   const navigate = useNavigate();
@@ -10,24 +12,42 @@ function ForgotPassword() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleReset = (e) => {
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState("");
+
+  const handleSendResetCode = async (e) => {
     e.preventDefault();
     setError("");
     setMessage("");
 
-    if (!email) {
+    if (!email.trim()) {
       setError("Please enter your college email.");
       return;
     }
 
-    setLoading(true);
-
-    // Simulate an API call for password reset
-    setTimeout(() => {
+    try {
+      setLoading(true);
+      const res = await sendOtp(email.trim());
+      setGeneratedOtp(res.code);
+      setShowOtpModal(true);
+    } catch (err) {
+      setError(err.message || "Failed to send reset code.");
+    } finally {
       setLoading(false);
-      setMessage("If an account exists with this email, a password reset link has been sent.");
-      setEmail(""); // clear the input
-    }, 1500);
+    }
+  };
+
+  const handleVerifyOtpForReset = async (enteredOtp) => {
+    await verifyOtp(email.trim(), enteredOtp);
+    setShowOtpModal(false);
+    setMessage(
+      "OTP verified successfully! A password reset link has been dispatched to your email address."
+    );
+  };
+
+  const handleResendOtp = async () => {
+    const res = await sendOtp(email.trim());
+    setGeneratedOtp(res.code);
   };
 
   return (
@@ -37,14 +57,16 @@ function ForgotPassword() {
     >
       {/* Left Side */}
       <div className="login-left">
-        <div className="login-brand" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
+        <div
+          className="login-brand"
+          style={{ cursor: "pointer" }}
+          onClick={() => navigate("/")}
+        >
           🎓 <span>Campus</span>Doubt
         </div>
 
         <div className="login-content">
-          <p className="login-small-title">
-            A COLLEGE COMMUNITY
-          </p>
+          <p className="login-small-title">A COLLEGE COMMUNITY</p>
 
           <h1>
             Ask. Learn.
@@ -55,23 +77,17 @@ function ForgotPassword() {
           </h1>
 
           <p className="login-description">
-            Join thousands of students, ask questions,
-            get answers, and build your knowledge with
-            the power of community and AI/ML.
+            Recover your student account securely using OTP verification.
           </p>
 
           <div className="login-points">
-            <div>✓ Ask and solve technical doubts</div>
-            <div>✓ Connect with college students</div>
-            <div>✓ Improve your technical skills</div>
+            <div>✓ Verified student community</div>
+            <div>✓ Real-time AI/ML query analysis</div>
+            <div>✓ Safe OTP-verified campus authentication</div>
           </div>
 
-          {/* Student Photo */}
           <div className="login-student-image">
-            <img
-              src={studentPhoto}
-              alt="Students learning together"
-            />
+            <img src={studentPhoto} alt="Students learning together" />
           </div>
         </div>
       </div>
@@ -84,52 +100,57 @@ function ForgotPassword() {
           </h2>
 
           <p className="login-subtitle">
-            Enter your email to receive a password reset link.
+            Enter your college email to verify via OTP and reset your password.
           </p>
 
-          <form onSubmit={handleReset}>
+          <form onSubmit={handleSendResetCode}>
             {/* Email */}
             <div className="input-group">
               <label>College Email</label>
-
               <div className="input-wrapper">
                 <span>✉</span>
-
                 <input
                   type="email"
                   placeholder="Enter your college email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
             </div>
 
             {/* Error Message */}
             {error && (
-              <p
+              <div
                 style={{
-                  color: "#e53935",
-                  fontSize: "14px",
+                  backgroundColor: "#fee2e2",
+                  color: "#b91c1c",
+                  padding: "10px 14px",
+                  borderRadius: "8px",
+                  fontSize: "13px",
                   marginTop: "8px",
-                  marginBottom: "16px",
+                  fontWeight: "500",
                 }}
               >
-                {error}
-              </p>
+                ⚠️ {error}
+              </div>
             )}
 
             {/* Success Message */}
             {message && (
-              <p
+              <div
                 style={{
-                  color: "#2e7d32",
-                  fontSize: "14px",
+                  backgroundColor: "#dcfce7",
+                  color: "#15803d",
+                  padding: "10px 14px",
+                  borderRadius: "8px",
+                  fontSize: "13px",
                   marginTop: "8px",
-                  marginBottom: "16px",
+                  fontWeight: "500",
                 }}
               >
-                {message}
-              </p>
+                ✓ {message}
+              </div>
             )}
 
             {/* Submit Button */}
@@ -137,9 +158,9 @@ function ForgotPassword() {
               type="submit"
               className="login-main-btn"
               disabled={loading}
-              style={{ marginTop: "10px" }}
+              style={{ marginTop: "16px" }}
             >
-              {loading ? "Sending link..." : "Send Reset Link"}
+              {loading ? "Generating OTP..." : "Send Verification OTP 🔐"}
             </button>
           </form>
 
@@ -153,22 +174,29 @@ function ForgotPassword() {
           {/* Back to Login */}
           <p className="signup-text">
             Remember your password?
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/login");
-              }}
+            <Link
+              to="/login"
+              style={{ fontWeight: "700", marginLeft: "6px", color: "#f59e0b" }}
             >
-              {" "}
               Login
-            </a>
+            </Link>
           </p>
         </div>
       </div>
+
+      {/* OTP Modal */}
+      <OtpModal
+        isOpen={showOtpModal}
+        email={email}
+        generatedOtp={generatedOtp}
+        onVerify={handleVerifyOtpForReset}
+        onResend={handleResendOtp}
+        onClose={() => setShowOtpModal(false)}
+        title="Password Reset Verification"
+        subtitle="Enter the 6-digit verification code sent to"
+      />
     </div>
   );
 }
 
 export default ForgotPassword;
-

@@ -1,502 +1,234 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import girlWithBook from "../assets/girlwithbook.png";
-import yellowBackground from "../assets/yellowbackground.png";
-import studentPhoto from "../assets/studentphoto.png";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import { getBookmarks, removeBookmark, getAuthToken } from "../api/api";
 
 function Bookmarks() {
+  const navigate = useNavigate();
+  const token = getAuthToken();
+  const [bookmarks, setBookmarks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All Categories");
 
-  const bookmarks = [
-    {
-      id: 1,
-      title: "How to connect React frontend with Django backend?",
-      description:
-        "I am trying to connect my React frontend with Django REST API. What is the best approach to handle authentication and API requests?",
-      tags: ["react", "django", "api", "authentication"],
-      votes: 24,
-      answers: 5,
-      views: 342,
-      time: "2 days ago",
-      category: "Web Development",
-    },
-    {
-      id: 2,
-      title: "Best resources to learn DSA in 2025?",
-      description:
-        "What are the best free or paid resources to learn Data Structures and Algorithms for placements?",
-      tags: ["dsa", "placement", "resources", "interview"],
-      votes: 18,
-      answers: 12,
-      views: 1200,
-      time: "5 days ago",
-      category: "DSA",
-    },
-    {
-      id: 3,
-      title: "How to deploy a full stack project for free?",
-      description:
-        "I have a React frontend and Node.js backend. What are the best free platforms to deploy both?",
-      tags: ["deployment", "render", "vercel", "fullstack"],
-      votes: 12,
-      answers: 8,
-      views: 890,
-      time: "1 week ago",
-      category: "DevOps",
-    },
-    {
-      id: 4,
-      title: "What is the difference between useEffect and useLayoutEffect?",
-      description:
-        "I am confused between useEffect and useLayoutEffect in React. When should I use each one?",
-      tags: ["react", "hooks", "useeffect", "uselayouteffect"],
-      votes: 9,
-      answers: 6,
-      views: 420,
-      time: "1 week ago",
-      category: "React",
-    },
-    {
-      id: 5,
-      title: "How does JWT authentication work?",
-      description:
-        "Can someone explain how JWT authentication works in a full stack application?",
-      tags: ["jwt", "authentication", "nodejs", "security"],
-      votes: 7,
-      answers: 9,
-      views: 510,
-      time: "2 weeks ago",
-      category: "Web Development",
-    },
-  ];
+  const loadBookmarks = async () => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      const res = await getBookmarks();
+      setBookmarks(res?.bookmarks || []);
+    } catch (err) {
+      setError(err.message || "Failed to load bookmarks.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredBookmarks = bookmarks.filter((item) => {
-    const matchesSearch =
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      item.tags.some((tag) =>
-        tag.toLowerCase().includes(search.toLowerCase())
-      );
+  useEffect(() => {
+    loadBookmarks();
+  }, [token]);
 
-    const matchesCategory =
-      category === "All Categories" ||
-      item.category === category;
+  const handleRemove = async (e, queryId) => {
+    e.stopPropagation();
+    try {
+      await removeBookmark(queryId);
+      setBookmarks((prev) => prev.filter((b) => (b.queryId?._id || b.queryId) !== queryId));
+    } catch (err) {
+      alert("Failed to remove bookmark: " + err.message);
+    }
+  };
 
-    return matchesSearch && matchesCategory;
+  if (!token) {
+    return (
+      <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
+        <Navbar />
+        <div style={{ maxWidth: "500px", margin: "80px auto", textAlign: "center", padding: "0 20px" }}>
+          <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔖</div>
+          <h2>Please Login to View Saved Bookmarks</h2>
+          <button
+            onClick={() => navigate("/login")}
+            style={{
+              marginTop: "16px",
+              backgroundColor: "#f59e0b",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "8px",
+              padding: "10px 20px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+          >
+            Login to Account
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const filtered = bookmarks.filter((b) => {
+    const title = b.queryId?.title || "";
+    const desc = b.queryId?.description || "";
+    return (
+      title.toLowerCase().includes(search.toLowerCase()) ||
+      desc.toLowerCase().includes(search.toLowerCase())
+    );
   });
 
   return (
-    <div
-      className="bookmarks-page"
-      style={{
-        backgroundImage: `
-          linear-gradient(
-            rgba(255, 255, 255, 0.88),
-            rgba(255, 255, 255, 0.88)
-          ),
-          url(${yellowBackground})
-        `,
-      }}
-    >
-      {/* Navbar */}
-      <header className="bookmarks-navbar">
-        <div className="bookmarks-logo">
-          <span>Smart</span>College
+    <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
+      <Navbar />
+
+      <div style={{ maxWidth: "1100px", margin: "32px auto", padding: "0 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+          <div>
+            <h1 style={{ fontSize: "26px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+              Saved Doubts & Bookmarks
+            </h1>
+            <p style={{ color: "#64748b", fontSize: "14px", margin: "4px 0 0" }}>
+              Questions you have bookmarked for future reference.
+            </p>
+          </div>
+
+          <span
+            style={{
+              backgroundColor: "#fef3c7",
+              color: "#b45309",
+              padding: "4px 12px",
+              borderRadius: "999px",
+              fontSize: "13px",
+              fontWeight: "700",
+            }}
+          >
+            {bookmarks.length} Saved
+          </span>
         </div>
 
-        <nav className="bookmarks-nav">
-          <Link to="/home">Home</Link>
-          <Link to="/questions">Questions</Link>
-          <Link to="/categories">Categories</Link>
-          <Link to="/ask-question">Ask Question</Link>
-        </nav>
-
-        <div className="bookmarks-search-top">
-          <span>⌕</span>
+        {/* Search */}
+        <div style={{ marginBottom: "20px" }}>
           <input
             type="text"
-            placeholder="Search questions, tags, or users..."
+            placeholder="Search saved doubts..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "12px 18px",
+              borderRadius: "10px",
+              border: "1.5px solid #cbd5e1",
+              fontSize: "14px",
+              outline: "none",
+              backgroundColor: "#ffffff",
+              boxSizing: "border-box",
+            }}
           />
         </div>
 
-        <button className="bookmarks-notification">♧</button>
+        {error && (
+          <div style={{ backgroundColor: "#fee2e2", color: "#b91c1c", padding: "12px", borderRadius: "8px", marginBottom: "20px" }}>
+            ⚠️ {error}
+          </div>
+        )}
 
-        <Link to="/profile" className="bookmarks-nav-user">
-          <img src={studentPhoto} alt="Priya" />
-          <span>Priya</span>
-          <span>⌄</span>
-        </Link>
-      </header>
-
-      <div className="bookmarks-layout">
-
-        {/* Sidebar */}
-        <aside className="bookmarks-sidebar">
-
-          <div className="bookmarks-menu">
-
-            <Link to="/home">
-              <span>⌂</span>
-              Dashboard
-            </Link>
-
-            <Link to="/questions">
-              <span>▤</span>
-              My Questions
-            </Link>
-
-            <Link to="/my-answers">
-              <span>☷</span>
-              My Answers
-            </Link>
-
-            <Link
-              to="/bookmarks"
-              className="active"
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "60px 0", color: "#64748b" }}>
+            Loading bookmarks...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "14px",
+              padding: "60px 20px",
+              textAlign: "center",
+              border: "1px dashed #cbd5e1",
+            }}
+          >
+            <span style={{ fontSize: "40px" }}>📑</span>
+            <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#0f172a", margin: "12px 0 6px" }}>
+              No bookmarks found
+            </h3>
+            <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "16px" }}>
+              Save interesting doubts from the questions feed to revisit them later.
+            </p>
+            <button
+              onClick={() => navigate("/question")}
+              style={{
+                backgroundColor: "#f59e0b",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "10px 18px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
             >
-              <span>🔖</span>
-              Bookmarks
-            </Link>
-
-            <Link to="/profile">
-              <span>♙</span>
-              Profile
-            </Link>
-
-            <Link to="#">
-              <span>⚙</span>
-              Settings
-            </Link>
-
+              Explore Questions
+            </button>
           </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {filtered.map((b) => {
+              const q = b.queryId;
+              const qId = q?._id || b.queryId;
 
-          {/* Need Help */}
-          <div className="bookmarks-help-card">
-
-            <div className="bookmarks-help-content">
-              <h2>Need Help?</h2>
-
-              <p>
-                Get support from our
-                college community.
-              </p>
-
-              <Link to="/ask-question">
-                Ask Now →
-              </Link>
-            </div>
-
-            <img
-              src={girlWithBook}
-              alt="Student with books"
-              className="bookmarks-help-image"
-            />
-
-          </div>
-
-        </aside>
-
-        {/* Main */}
-        <main className="bookmarks-main">
-
-          {/* Page Header */}
-          <section className="bookmarks-page-header">
-
-            <div className="bookmarks-header-icon">
-              🔖
-            </div>
-
-            <div>
-              <h1>My Bookmarks</h1>
-
-              <p>
-                All your saved questions in one place.
-                Revisit, learn and keep track of important questions.
-              </p>
-            </div>
-
-            <div className="bookmarks-header-decoration">
-              📚
-            </div>
-
-          </section>
-
-          <div className="bookmarks-content-grid">
-
-            {/* Questions Section */}
-            <section className="bookmarks-question-section">
-
-              {/* Search / Sort */}
-              <div className="bookmarks-toolbar">
-
-                <div className="bookmarks-page-search">
-                  <span>⌕</span>
-
-                  <input
-                    type="text"
-                    placeholder="Search bookmarked questions..."
-                    value={search}
-                    onChange={(e) =>
-                      setSearch(e.target.value)
-                    }
-                  />
-                </div>
-
-                <div className="bookmarks-toolbar-actions">
-
-                  <select defaultValue="newest">
-                    <option value="newest">
-                      Sort by: Newest
-                    </option>
-
-                    <option value="oldest">
-                      Oldest
-                    </option>
-
-                    <option value="votes">
-                      Most Votes
-                    </option>
-
-                    <option value="views">
-                      Most Viewed
-                    </option>
-                  </select>
-
-                  <button className="toolbar-view active">
-                    ☰
-                  </button>
-
-                  <button className="toolbar-view">
-                    ▦
-                  </button>
-
-                </div>
-
-              </div>
-
-              {/* Bookmark List */}
-              <div className="bookmark-list">
-
-                {filteredBookmarks.length === 0 ? (
-                  <div className="no-bookmarks">
-                    <div>🔖</div>
-                    <h2>No bookmarks found</h2>
-                    <p>
-                      Try changing your search or category filter.
-                    </p>
-                  </div>
-                ) : (
-                  filteredBookmarks.map((question) => (
-
-                    <article
-                      className="bookmark-question-card"
-                      key={question.id}
-                    >
-
-                      {/* Vote */}
-                      <div className="bookmark-vote-box">
-                        <span>△</span>
-                        <strong>{question.votes}</strong>
-                      </div>
-
-                      {/* Question Content */}
-                      <div className="bookmark-question-content">
-
-                        <Link
-                          to="/question-detail"
-                          className="bookmark-question-title"
-                        >
-                          {question.title}
-                        </Link>
-
-                        <p className="bookmark-question-description">
-                          {question.description}
-                        </p>
-
-                        {/* Tags */}
-                        <div className="bookmark-tags">
-
-                          {question.tags.map((tag) => (
-                            <span key={tag}>
-                              {tag}
-                            </span>
-                          ))}
-
-                        </div>
-
-                        {/* Author */}
-                        <div className="bookmark-author">
-
-                          <img
-                            src={studentPhoto}
-                            alt="Priya"
-                          />
-
-                          <span>Priya Sharma</span>
-
-                          <span>•</span>
-
-                          <span>{question.time}</span>
-
-                          <span>•</span>
-
-                          <span>
-                            in {question.category}
-                          </span>
-
-                        </div>
-
-                      </div>
-
-                      {/* Stats */}
-                      <div className="bookmark-question-stats">
-
-                        <div>
-                          <span>▢</span>
-                          <span>
-                            {question.answers} answers
-                          </span>
-                        </div>
-
-                        <div>
-                          <span>◉</span>
-                          <span>
-                            {question.views >= 1000
-                              ? `${(question.views / 1000).toFixed(1)}k`
-                              : question.views}{" "}
-                            views
-                          </span>
-                        </div>
-
-                      </div>
-
-                      {/* Bookmark Button */}
-                      <button
-                        className="bookmark-remove-button"
-                        title="Remove bookmark"
-                      >
-                        🔖
-                      </button>
-
-                    </article>
-
-                  ))
-                )}
-
-              </div>
-
-            </section>
-
-            {/* Right Sidebar */}
-            <aside className="bookmarks-right-sidebar">
-
-              {/* Filters */}
-              <section className="bookmark-filter-card">
-
-                <div className="bookmark-side-title">
-                  <span>⚱</span>
-                  <h2>Filter Bookmarks</h2>
-                </div>
-
-                <label>Category</label>
-
-                <select
-                  value={category}
-                  onChange={(e) =>
-                    setCategory(e.target.value)
-                  }
+              return (
+                <div
+                  key={b._id}
+                  onClick={() => navigate(`/questiondetail?id=${qId}`)}
+                  style={{
+                    backgroundColor: "#ffffff",
+                    borderRadius: "14px",
+                    padding: "20px 24px",
+                    border: "1px solid #e2e8f0",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                    cursor: "pointer",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    gap: "16px",
+                  }}
                 >
-                  <option>All Categories</option>
-                  <option>Web Development</option>
-                  <option>DSA</option>
-                  <option>React</option>
-                  <option>DevOps</option>
-                </select>
-
-                <label>Tags</label>
-
-                <input
-                  type="text"
-                  placeholder="Search tags..."
-                />
-
-                <div className="bookmark-checkboxes">
-
-                  <label>
-                    <input type="checkbox" />
-                    React <span>(12)</span>
-                  </label>
-
-                  <label>
-                    <input type="checkbox" />
-                    JavaScript <span>(8)</span>
-                  </label>
-
-                  <label>
-                    <input type="checkbox" />
-                    Python <span>(5)</span>
-                  </label>
-
-                  <label>
-                    <input type="checkbox" />
-                    Django <span>(4)</span>
-                  </label>
-
-                  <label>
-                    <input type="checkbox" />
-                    DSA <span>(6)</span>
-                  </label>
-
-                  <label>
-                    <input type="checkbox" />
-                    DevOps <span>(3)</span>
-                  </label>
-
-                  <label>
-                    <input type="checkbox" />
-                    Others <span>(2)</span>
-                  </label>
-
-                </div>
-
-              </section>
-
-              {/* Stats */}
-              <section className="bookmark-stats-card">
-
-                <div className="bookmark-side-title">
-                  <span>▥</span>
-                  <h2>Bookmark Stats</h2>
-                </div>
-
-                <div className="bookmark-total">
-
                   <div>
-                    <strong>
-                      {bookmarks.length}
-                    </strong>
-
-                    <span>
-                      Total Bookmarked
-                      <br />
-                      Questions
-                    </span>
+                    <h3 style={{ fontSize: "17px", fontWeight: "700", color: "#0f172a", margin: "0 0 6px 0" }}>
+                      {q?.title || "Doubt"}
+                    </h3>
+                    <p style={{ color: "#475569", fontSize: "14px", margin: "0 0 10px 0", lineHeight: "1.5" }}>
+                      {q?.description?.slice(0, 160)}...
+                    </p>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center", fontSize: "12px", color: "#64748b" }}>
+                      {q?.domain && (
+                        <span style={{ backgroundColor: "#eff6ff", color: "#1d4ed8", padding: "2px 8px", borderRadius: "4px", fontWeight: "600" }}>
+                          🏷️ {q.domain}
+                        </span>
+                      )}
+                      <span>Saved on {new Date(b.createdAt).toLocaleDateString()}</span>
+                    </div>
                   </div>
 
-                  <div className="bookmark-big-icon">
-                    🔖
-                  </div>
-
+                  <button
+                    onClick={(e) => handleRemove(e, qId)}
+                    style={{
+                      backgroundColor: "transparent",
+                      color: "#ef4444",
+                      border: "1px solid #fca5a5",
+                      borderRadius: "6px",
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                    }}
+                  >
+                    Remove
+                  </button>
                 </div>
-
-              </section>
-
-            </aside>
-
+              );
+            })}
           </div>
-
-        </main>
-
+        )}
       </div>
     </div>
   );

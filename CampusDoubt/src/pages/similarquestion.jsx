@@ -1,436 +1,278 @@
-import { Link } from "react-router-dom";
-
-import girlwithbook from "../assets/girlwithbook.png";
-import studentphoto from "../assets/studentphoto.png";
-
-import "./similarquestion.css";
-
-const similarQuestions = [
-  {
-    votes: 145,
-    answers: 32,
-    similarity: "96% similar",
-    title: "How to center a div horizontally and vertically in CSS?",
-    description:
-      "I want to center a div both horizontally and vertically on the page. What is the best approach using modern CSS?",
-    tags: ["css", "html", "flexbox", "front-end"],
-    author: "Aman Verma",
-    time: "2 years ago",
-  },
-  {
-    votes: 98,
-    answers: 18,
-    similarity: "92% similar",
-    title: "Different ways to center a div in CSS",
-    description:
-      "What are the different methods to center a div in CSS? Can someone explain with examples using Flexbox, Grid and absolute positioning?",
-    tags: ["css", "html", "layout", "grid", "flexbox"],
-    author: "Sneha Gupta",
-    time: "1 year ago",
-  },
-  {
-    votes: 76,
-    answers: 12,
-    similarity: "87% similar",
-    title: "Why is my div not centered even though I used margin: auto?",
-    description:
-      "I used margin: auto to center a div but it is not working. What could be the issue and how can I fix it?",
-    tags: ["css", "html", "margin", "layout"],
-    author: "Rohit Sharma",
-    time: "8 months ago",
-  },
-  {
-    votes: 54,
-    answers: 10,
-    similarity: "84% similar",
-    title: "Center a div inside a parent div using CSS",
-    description:
-      "How can I center a div inside another div? I want both horizontal and vertical centering. What's the best method?",
-    tags: ["css", "html", "flexbox", "parent-child"],
-    author: "Neha Singh",
-    time: "1 year ago",
-  },
-  {
-    votes: 42,
-    answers: 8,
-    similarity: "78% similar",
-    title: "Center text and div using CSS",
-    description:
-      "How to center both text and a div using CSS? I want it to work on all screen sizes and be responsive.",
-    tags: ["css", "html", "text-align", "responsive"],
-    author: "Karan Mehta",
-    time: "1 year ago",
-  },
-];
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import { predictDomain, getMLRecommendations } from "../api/api";
 
 function SimilarQuestion() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get("q") || "How to reverse a binary tree";
+
+  const [queryText, setQueryText] = useState(initialQuery);
+  const [predictedDomain, setPredictedDomain] = useState("");
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleRunMlClustering = async (targetQuery) => {
+    const q = targetQuery || queryText;
+    if (!q.trim()) return;
+
+    try {
+      setLoading(true);
+      setError("");
+
+      // 1. ML Model 1: Domain Classification
+      const domain = await predictDomain(q);
+      setPredictedDomain(domain);
+
+      // 2. ML Model 2: Similar Queries Clustering
+      const recs = await getMLRecommendations(q);
+      setRecommendations(recs);
+    } catch (err) {
+      setError(err.message || "Failed to fetch ML recommendations.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    handleRunMlClustering(initialQuery);
+  }, []);
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    handleRunMlClustering(queryText);
+  };
+
   return (
-    <div className="similar-page">
+    <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
+      <Navbar />
 
-      {/* ================= NAVBAR ================= */}
-
-      <header className="similar-navbar">
-
-        <Link to="/" className="similar-logo">
-          <div className="similar-logo-icon">
-            🎓
+      <div style={{ maxWidth: "1100px", margin: "32px auto", padding: "0 20px" }}>
+        {/* Page Title */}
+        <div style={{ textAlign: "center", marginBottom: "32px" }}>
+          <div
+            style={{
+              display: "inline-block",
+              backgroundColor: "#fef3c7",
+              color: "#b45309",
+              padding: "4px 12px",
+              borderRadius: "999px",
+              fontSize: "13px",
+              fontWeight: "700",
+              marginBottom: "8px",
+            }}
+          >
+            ⚡ Machine Learning Service
           </div>
+          <h1 style={{ fontSize: "30px", fontWeight: "800", color: "#0f172a", margin: "4px 0" }}>
+            AI/ML Doubt Classifier & Clustering Engine
+          </h1>
+          <p style={{ color: "#64748b", fontSize: "15px", maxWidth: "600px", margin: "8px auto 0" }}>
+            Enter any programming doubt or question to run Model 1 (Domain Classification) and Model 2 (Similar Queries Recommender).
+          </p>
+        </div>
 
-          <span>Smart College</span>
-        </Link>
-
-
-        <div className="similar-search">
-
-          <span>⌕</span>
-
+        {/* Input Box */}
+        <form
+          onSubmit={handleFormSubmit}
+          style={{
+            display: "flex",
+            gap: "12px",
+            maxWidth: "760px",
+            margin: "0 auto 36px",
+          }}
+        >
           <input
             type="text"
-            placeholder="Search questions, topics or categories..."
+            placeholder="Type your question (e.g. Binary Search Tree, JWT tokens, React hooks)..."
+            value={queryText}
+            onChange={(e) => setQueryText(e.target.value)}
+            style={{
+              flex: 1,
+              padding: "14px 20px",
+              borderRadius: "12px",
+              border: "1.5px solid #cbd5e1",
+              fontSize: "15px",
+              outline: "none",
+              backgroundColor: "#ffffff",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+            }}
           />
-
-          <button>
-            Search
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              backgroundColor: "#f59e0b",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "12px",
+              padding: "14px 28px",
+              fontSize: "15px",
+              fontWeight: "700",
+              cursor: loading ? "not-allowed" : "pointer",
+              boxShadow: "0 4px 12px rgba(245, 158, 11, 0.3)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {loading ? "Analyzing..." : "Analyze with ML 🤖"}
           </button>
+        </form>
 
-        </div>
-
-
-        <div className="similar-navbar-right">
-
-          <div className="similar-notification">
-            🔔
-            <span></span>
+        {/* Error */}
+        {error && (
+          <div
+            style={{
+              backgroundColor: "#fee2e2",
+              color: "#b91c1c",
+              padding: "14px 20px",
+              borderRadius: "12px",
+              marginBottom: "24px",
+              textAlign: "center",
+            }}
+          >
+            ⚠️ {error}
           </div>
+        )}
 
-          <div className="similar-profile">
-
-            <img
-              src={studentphoto}
-              alt="Priya"
-            />
-
-            <strong>Priya</strong>
-
-            <span>⌄</span>
-
+        {/* Results Overview */}
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "60px 0", color: "#64748b" }}>
+            <div style={{ fontSize: "36px", marginBottom: "12px" }}>🤖</div>
+            <p>Running FastAPI ML Models (Domain Classifier & Clustering)...</p>
           </div>
-
-        </div>
-
-      </header>
-
-
-      {/* ================= PAGE LAYOUT ================= */}
-
-      <div className="similar-layout">
-
-
-        {/* ================= LEFT SIDEBAR ================= */}
-
-        <aside className="similar-sidebar">
-
-          <nav>
-
-            <Link
-              to="/"
-              className="similar-side-link"
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "28px" }}>
+            {/* Left Card: Model 1 Details */}
+            <div
+              style={{
+                backgroundColor: "#ffffff",
+                borderRadius: "16px",
+                padding: "24px",
+                border: "1px solid #e2e8f0",
+                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)",
+                height: "fit-content",
+              }}
             >
-              <span>⌂</span>
-              Home
-            </Link>
+              <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#0f172a", marginBottom: "16px" }}>
+                Model 1: Domain Classification
+              </h3>
 
+              <div style={{ marginBottom: "16px" }}>
+                <span style={{ fontSize: "12px", color: "#64748b", display: "block" }}>
+                  Analyzed Query:
+                </span>
+                <strong style={{ fontSize: "14px", color: "#0f172a" }}>
+                  "{queryText}"
+                </strong>
+              </div>
 
-            <Link
-              to="/ask-question"
-              className="similar-side-link"
-            >
-              <span>?</span>
-              Ask Question
-            </Link>
+              <div
+                style={{
+                  padding: "14px",
+                  borderRadius: "10px",
+                  backgroundColor: "#eff6ff",
+                  border: "1px solid #bfdbfe",
+                  marginBottom: "20px",
+                }}
+              >
+                <span style={{ fontSize: "12px", color: "#1d4ed8", fontWeight: "600" }}>
+                  Predicted Technical Domain:
+                </span>
+                <div style={{ fontSize: "20px", fontWeight: "800", color: "#1e40af", marginTop: "4px" }}>
+                  {predictedDomain || "General"}
+                </div>
+              </div>
 
-
-            <Link
-              to="/questions"
-              className="similar-side-link"
-            >
-              <span>▣</span>
-              Questions
-            </Link>
-
-
-            <Link
-              to="/my-answers"
-              className="similar-side-link"
-            >
-              <span>☑</span>
-              My Answers
-            </Link>
-
-
-            <Link
-              to="/bookmarks"
-              className="similar-side-link"
-            >
-              <span>♡</span>
-              Bookmarks
-            </Link>
-
-
-            <Link
-              to="/categories"
-              className="similar-side-link"
-            >
-              <span>⊞</span>
-              Categories
-            </Link>
-
-
-            <Link
-              to="/trending"
-              className="similar-side-link"
-            >
-              <span>⌁</span>
-              Trending
-            </Link>
-
-
-            <Link
-              to="/search-results"
-              className="similar-side-link"
-            >
-              <span>⌕</span>
-              Search Results
-            </Link>
-
-
-            <Link
-              to="/similar-questions"
-              className="similar-side-link active"
-            >
-              <span>🔗</span>
-              Similar Questions
-            </Link>
-
-
-            <Link
-              to="/profile"
-              className="similar-side-link"
-            >
-              <span>♙</span>
-              Profile
-            </Link>
-
-          </nav>
-
-
-          <div className="similar-sidebar-student">
-
-            <img
-              src={girlwithbook}
-              alt="Student"
-            />
-
-          </div>
-
-        </aside>
-
-
-        {/* ================= MAIN CONTENT ================= */}
-
-        <main className="similar-main">
-
-          <div className="similar-heading">
-
-            <h1>
-              Similar Questions
-            </h1>
-
-            <p>
-              Here are some questions similar to the one
-              you're looking at. These might help you find
-              the answer you need.
-            </p>
-
-          </div>
-
-
-          {/* ================= ORIGINAL QUESTION ================= */}
-
-          <div className="original-question">
-
-            <div className="original-icon">
-              📄
+              <button
+                onClick={() => navigate(`/askquestion`)}
+                style={{
+                  width: "100%",
+                  backgroundColor: "#0284c7",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "10px 16px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                + Post This Doubt
+              </button>
             </div>
 
-            <div className="original-text">
-
-              <span>
-                Based on:
-              </span>
-
-              <strong>
-                "How to center a div in CSS?"
-              </strong>
-
-            </div>
-
-            <Link to="/question-detail">
-              View Original Question →
-            </Link>
-
-          </div>
-
-
-          {/* ================= SIMILAR QUESTIONS ================= */}
-
-          <div className="similar-list">
-
-            {similarQuestions.map(
-              (question, index) => (
-
-                <article
-                  className="similar-card"
-                  key={index}
+            {/* Right Card: Model 2 Clustering Recommendations */}
+            <div
+              style={{
+                backgroundColor: "#ffffff",
+                borderRadius: "16px",
+                padding: "28px",
+                border: "1px solid #e2e8f0",
+                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#0f172a", margin: 0 }}>
+                  Model 2: Similar Queries Cluster
+                </h3>
+                <span
+                  style={{
+                    backgroundColor: "#f0fdf4",
+                    color: "#166534",
+                    padding: "3px 10px",
+                    borderRadius: "999px",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                  }}
                 >
+                  {recommendations.length} Matches Found
+                </span>
+              </div>
 
-                  {/* VOTES */}
-
-                  <div className="similar-votes">
-
-                    <button>
-                      ⌃
-                    </button>
-
-                    <strong>
-                      {question.votes}
-                    </strong>
-
-                    <button>
-                      ⌄
-                    </button>
-
-                    <div className="similar-answer-count">
-
-                      {question.answers}
-
-                      <span>
-                        answers
-                      </span>
-
-                    </div>
-
-                  </div>
-
-
-                  {/* QUESTION CONTENT */}
-
-                  <div className="similar-content">
-
-                    <div className="similar-title-row">
-
-                      <Link to="/question-detail">
-                        {question.title}
-                      </Link>
-
-                      <span className="similarity-badge">
-                        {question.similarity}
-                      </span>
-
-                    </div>
-
-
-                    <p>
-                      {question.description}
-                    </p>
-
-
-                    <div className="similar-bottom">
-
-                      <div className="similar-tags">
-
-                        {question.tags.map(
-                          (tag) => (
-                            <span key={tag}>
-                              {tag}
-                            </span>
-                          )
-                        )}
-
-                      </div>
-
-
-                      <div className="similar-author">
-
-                        <img
-                          src={studentphoto}
-                          alt={question.author}
-                        />
-
-                        <div>
-
-                          <strong>
-                            {question.author}
-                          </strong>
-
-                          <small>
-                            {question.time}
-                          </small>
-
+              {recommendations.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8" }}>
+                  No similar queries returned for this prompt.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {recommendations.map((rec, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: "16px",
+                        borderRadius: "12px",
+                        backgroundColor: "#f8fafc",
+                        border: "1px solid #e2e8f0",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "12px",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => navigate(`/searchresults?q=${encodeURIComponent(rec)}`)}
+                    >
+                      <div>
+                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#0f172a" }}>
+                          {rec}
+                        </span>
+                        <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
+                          Clustered in: <strong>{predictedDomain || "General"}</strong>
                         </div>
-
                       </div>
 
+                      <span style={{ color: "#f59e0b", fontSize: "13px", fontWeight: "700", flexShrink: 0 }}>
+                        Search Doubts →
+                      </span>
                     </div>
-
-                  </div>
-
-                </article>
-
-              )
-            )}
-
-          </div>
-
-        </main>
-
-
-        {/* ================= RIGHT HELP CARD ================= */}
-
-        <aside className="similar-right">
-
-          <div className="similar-help-card">
-
-            <div className="similar-help-content">
-
-              <h2>
-                💡 Need Help?
-              </h2>
-
-              <p>
-                Can't find the right answer?
-                Ask the community or explore
-                related questions.
-              </p>
-
-              <Link to="/ask-question">
-                Ask a Question →
-              </Link>
-
+                  ))}
+                </div>
+              )}
             </div>
-
-
-            <img
-              src={girlwithbook}
-              alt="Need Help"
-            />
-
           </div>
-
-        </aside>
-
+        )}
       </div>
-
     </div>
   );
 }

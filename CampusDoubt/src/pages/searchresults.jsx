@@ -1,584 +1,246 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-
-import girlwithbook from "../assets/girlwithbook.png";
-import studentphoto from "../assets/studentphoto.png";
-
-
-
-const questions = [
-  {
-    votes: 125,
-    answers: 8,
-    title: "How does React useEffect hook work?",
-    description:
-      "I am trying to understand how the useEffect hook works in React. When exactly does it run and how can we control its dependencies?",
-    tags: ["react", "javascript", "hooks", "frontend"],
-    author: "Priya Sharma",
-    time: "2 hours ago",
-    accepted: true,
-  },
-  {
-    votes: 87,
-    answers: 5,
-    title: "Conditional rendering in React",
-    description:
-      "What is the best way to do conditional rendering in React? Should I use ternary operator or logical &&?",
-    tags: ["react", "javascript", "conditional-rendering"],
-    author: "Arjun Mehta",
-    time: "5 hours ago",
-    accepted: false,
-  },
-  {
-    votes: 64,
-    answers: 3,
-    title: "How to pass data between components in React?",
-    description:
-      "I am new to React and confused about the different ways to pass data between components. Can someone explain with examples?",
-    tags: ["react", "components", "props", "state"],
-    author: "Sneha Verma",
-    time: "1 day ago",
-    accepted: false,
-  },
-  {
-    votes: 53,
-    answers: 4,
-    title: "React Router not working in production",
-    description:
-      "My React Router works fine in development but shows 404 error in production. How can I fix this issue?",
-    tags: ["react", "react-router", "deployment", "vite"],
-    author: "Rohan Gupta",
-    time: "1 day ago",
-    accepted: false,
-  },
-  {
-    votes: 41,
-    answers: 2,
-    title: "Difference between useState and useRef in React",
-    description:
-      "What is the difference between useState and useRef in React? When should we use each of them?",
-    tags: ["react", "usestate", "useref", "hooks"],
-    author: "Neha Singh",
-    time: "2 days ago",
-    accepted: false,
-  },
-];
-
-const relatedTags = [
-  "react",
-  "javascript",
-  "hooks",
-  "frontend",
-  "components",
-  "usestate",
-  "react-router",
-  "vite",
-];
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import { getQueries, getMLRecommendations } from "../api/api";
 
 function SearchResults() {
-  const [search, setSearch] = useState("React");
-  const [activeTab, setActiveTab] = useState("All");
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const query = searchParams.get("q") || "";
 
-  const filteredQuestions = questions.filter((question) => {
-    const text =
-      `${question.title} ${question.description} ${question.tags.join(" ")}`
-        .toLowerCase();
+  const [searchInput, setSearchInput] = useState(query);
+  const [questions, setQuestions] = useState([]);
+  const [mlRecommendations, setMlRecommendations] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    return text.includes(search.toLowerCase());
-  });
+  useEffect(() => {
+    setSearchInput(query);
+    if (!query.trim()) {
+      setLoading(false);
+      return;
+    }
+
+    const runSearch = async () => {
+      try {
+        setLoading(true);
+
+        // 1. Fetch live questions from backend
+        const qRes = await getQueries().catch(() => null);
+        const allQuestions = qRes?.queries || [];
+
+        // Match against title, description, or domain
+        const lowerQ = query.toLowerCase();
+        const matches = allQuestions.filter((item) => {
+          return (
+            item.title?.toLowerCase().includes(lowerQ) ||
+            item.description?.toLowerCase().includes(lowerQ) ||
+            item.domain?.toLowerCase().includes(lowerQ)
+          );
+        });
+        setQuestions(matches);
+
+        // 2. Fetch ML Model 2 recommendations
+        const recs = await getMLRecommendations(query).catch(() => []);
+        setMlRecommendations(recs || []);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    runSearch();
+  }, [query]);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      navigate(`/searchresults?q=${encodeURIComponent(searchInput.trim())}`);
+    }
+  };
 
   return (
-    <div className="search-results-page">
+    <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
+      <Navbar />
 
-      {/* NAVBAR */}
-      <header className="search-navbar">
-
-        <Link to="/" className="search-logo">
-          <div className="logo-icon">🎓</div>
-          <span>Smart College</span>
-        </Link>
-
-        <div className="top-search">
-          <span>⌕</span>
-
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search questions..."
-          />
-
-          <button>Search</button>
-        </div>
-
-        <div className="navbar-right">
-
-          <div className="notification">
-            🔔
-            <span></span>
-          </div>
-
-          <div className="profile-mini">
-            <img src={studentphoto} alt="Profile" />
-            <strong>Vishal</strong>
-            <span>⌄</span>
-          </div>
-
-        </div>
-
-      </header>
-
-      <div className="search-layout">
-
-        {/* SIDEBAR */}
-        <aside className="search-sidebar">
-
-          <nav>
-
-            <Link to="/" className="side-link">
-              <span>⌂</span>
-              Home
-            </Link>
-
-            <Link to="/ask-question" className="side-link">
-              <span>?</span>
-              Ask Question
-            </Link>
-
-            <Link to="/questions" className="side-link">
-              <span>▣</span>
-              Questions
-            </Link>
-
-            <Link to="/my-answers" className="side-link">
-              <span>☑</span>
-              My Answers
-            </Link>
-
-            <Link to="/bookmarks" className="side-link">
-              <span>♡</span>
-              Bookmarks
-            </Link>
-
-            <Link to="/categories" className="side-link">
-              <span>⊞</span>
-              Categories
-            </Link>
-
-            <Link to="/trending" className="side-link">
-              <span>⌁</span>
-              Trending
-            </Link>
-
-            <Link
-              to="/search-results"
-              className="side-link active"
-            >
-              <span>⌕</span>
-              Search Results
-            </Link>
-
-            <Link to="/profile" className="side-link">
-              <span>♙</span>
-              Profile
-            </Link>
-
-          </nav>
-
-          <div className="sidebar-student">
-            <img
-              src={girlwithbook}
-              alt="Student"
+      <div style={{ maxWidth: "1100px", margin: "32px auto", padding: "0 20px" }}>
+        {/* Search Header */}
+        <div style={{ marginBottom: "28px" }}>
+          <form onSubmit={handleSearchSubmit} style={{ display: "flex", gap: "10px", maxWidth: "640px" }}>
+            <input
+              type="text"
+              placeholder="Search doubts across all domains..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              style={{
+                flex: 1,
+                padding: "12px 18px",
+                borderRadius: "10px",
+                border: "1.5px solid #cbd5e1",
+                fontSize: "14px",
+                outline: "none",
+                backgroundColor: "#ffffff",
+              }}
             />
+            <button
+              type="submit"
+              style={{
+                backgroundColor: "#f59e0b",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "10px",
+                padding: "12px 22px",
+                fontWeight: "700",
+                cursor: "pointer",
+              }}
+            >
+              Search
+            </button>
+          </form>
+
+          <p style={{ marginTop: "12px", color: "#64748b", fontSize: "14px" }}>
+            Results for: <strong style={{ color: "#0f172a" }}>"{query}"</strong>
+          </p>
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "60px 0", color: "#64748b" }}>
+            Searching database and running ML recommender...
           </div>
-
-        </aside>
-
-        {/* MAIN CONTENT */}
-        <main className="search-main">
-
-          <div className="search-heading">
-
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr", gap: "28px", alignItems: "start" }}>
+            {/* Matching Questions List */}
             <div>
-              <h1>Search Results</h1>
+              <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#0f172a", marginBottom: "16px" }}>
+                Matching Doubts ({questions.length})
+              </h2>
 
-              <p>
-                {filteredQuestions.length > 0
-                  ? "128 results found for"
-                  : "No results found for"}{" "}
-                <strong>"{search}"</strong>
-              </p>
-            </div>
-
-          </div>
-
-          {/* TABS */}
-          <div className="search-tabs">
-
-            {[
-              "All",
-              "Questions",
-              "Users",
-              "Tags",
-              "Categories",
-            ].map((tab) => (
-              <button
-                key={tab}
-                className={
-                  activeTab === tab
-                    ? "tab-active"
-                    : ""
-                }
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-
-                {tab === "All" && " (128)"}
-                {tab === "Questions" && " (102)"}
-                {tab === "Users" && " (12)"}
-                {tab === "Tags" && " (8)"}
-                {tab === "Categories" && " (6)"}
-              </button>
-            ))}
-
-          </div>
-
-          {/* RESULTS */}
-          <div className="results-list">
-
-            {filteredQuestions.length > 0 ? (
-
-              filteredQuestions.map(
-                (question, index) => (
-
-                  <article
-                    className="result-card"
-                    key={index}
+              {questions.length === 0 ? (
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    borderRadius: "14px",
+                    padding: "48px 24px",
+                    textAlign: "center",
+                    border: "1px dashed #cbd5e1",
+                  }}
+                >
+                  <p style={{ color: "#64748b", margin: "0 0 16px 0", fontSize: "15px" }}>
+                    No exact questions matched "{query}".
+                  </p>
+                  <button
+                    onClick={() => navigate("/askquestion")}
+                    style={{
+                      backgroundColor: "#f59e0b",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: "8px",
+                      padding: "10px 18px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                    }}
                   >
-
-                    {/* VOTES */}
-                    <div className="vote-box">
-
-                      <button>⌃</button>
-
-                      <strong>
-                        {question.votes}
-                      </strong>
-
-                      <button>⌄</button>
-
-                      <div className="answer-count">
-                        {question.answers}
-                        <span>answers</span>
-                      </div>
-
-                    </div>
-
-                    {/* QUESTION */}
-                    <div className="question-content">
-
-                      <div className="question-top">
-
-                        <Link to="/question-detail">
-                          {question.title}
-                        </Link>
-
-                        {question.accepted && (
-                          <span className="accepted-badge">
-                            ✓ Accepted Answer
+                    + Ask This Question Now
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  {questions.map((q) => (
+                    <div
+                      key={q._id}
+                      onClick={() => navigate(`/questiondetail?id=${q._id}`)}
+                      style={{
+                        backgroundColor: "#ffffff",
+                        borderRadius: "12px",
+                        padding: "20px",
+                        border: "1px solid #e2e8f0",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
+                        <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#0f172a", margin: "0 0 6px 0" }}>
+                          {q.title}
+                        </h3>
+                        {q.domain && (
+                          <span
+                            style={{
+                              backgroundColor: "#eff6ff",
+                              color: "#1d4ed8",
+                              padding: "2px 8px",
+                              borderRadius: "999px",
+                              fontSize: "11px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            🏷️ {q.domain}
                           </span>
                         )}
-
                       </div>
 
-                      <p>
-                        {question.description}
+                      <p style={{ color: "#475569", fontSize: "13px", lineHeight: "1.5", margin: "0 0 10px 0" }}>
+                        {q.description?.slice(0, 140)}...
                       </p>
 
-                      <div className="question-bottom">
-
-                        <div className="question-tags">
-
-                          {question.tags.map(
-                            (tag) => (
-                              <span key={tag}>
-                                {tag}
-                              </span>
-                            )
-                          )}
-
-                        </div>
-
-                        <div className="question-author">
-
-                          <img
-                            src={studentphoto}
-                            alt={question.author}
-                          />
-
-                          <div>
-                            <strong>
-                              {question.author}
-                            </strong>
-
-                            <small>
-                              {question.time}
-                            </small>
-                          </div>
-
-                        </div>
-
+                      <div style={{ fontSize: "12px", color: "#94a3b8" }}>
+                        Asked by {q.userId?.name || "Student"} • {new Date(q.createdAt).toLocaleDateString()}
                       </div>
-
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-                  </article>
-
-                )
-              )
-
-            ) : (
-
-              <div className="no-results">
-
-                <div className="no-results-icon">
-                  🔍
+            {/* Sidebar ML Suggestions */}
+            <div>
+              <div
+                style={{
+                  backgroundColor: "#ffffff",
+                  borderRadius: "16px",
+                  padding: "20px",
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                  <span>🤖</span>
+                  <h3 style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", margin: 0 }}>
+                    ML Related Queries (Model 2)
+                  </h3>
                 </div>
 
-                <h2>No results found</h2>
-
-                <p>
-                  Try different keywords or ask
-                  the community.
+                <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "12px" }}>
+                  Clustered related search queries:
                 </p>
 
-                <Link to="/ask-question">
-                  Ask a Question →
-                </Link>
-
+                {mlRecommendations.length === 0 ? (
+                  <p style={{ fontSize: "12px", color: "#94a3b8", fontStyle: "italic" }}>
+                    No ML recommendations for this search term.
+                  </p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {mlRecommendations.map((rec, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => navigate(`/searchresults?q=${encodeURIComponent(rec)}`)}
+                        style={{
+                          padding: "8px 10px",
+                          backgroundColor: "#f8fafc",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          color: "#0369a1",
+                          border: "1px solid #e2e8f0",
+                          cursor: "pointer",
+                        }}
+                      >
+                        • {rec}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-
-            )}
-
+            </div>
           </div>
-
-          {/* PAGINATION */}
-          {filteredQuestions.length > 0 && (
-            <div className="pagination">
-
-              <button>‹</button>
-
-              <button className="page-active">
-                1
-              </button>
-
-              <button>2</button>
-              <button>3</button>
-              <button>4</button>
-              <button>5</button>
-
-              <span>...</span>
-
-              <button>13</button>
-
-              <button>›</button>
-
-            </div>
-          )}
-
-        </main>
-
-        {/* RIGHT SIDEBAR */}
-        <aside className="search-right">
-
-          {/* FILTERS */}
-          <div className="right-card">
-
-            <h2>⚱ Filters</h2>
-
-            <label>Time</label>
-
-            <select>
-              <option>All Time</option>
-              <option>Today</option>
-              <option>This Week</option>
-              <option>This Month</option>
-            </select>
-
-            <label>Tags</label>
-
-            <select>
-              <option>All Tags</option>
-              <option>React</option>
-              <option>JavaScript</option>
-              <option>Hooks</option>
-            </select>
-
-            <label>Category</label>
-
-            <select>
-              <option>All Categories</option>
-              <option>Web Development</option>
-              <option>Programming</option>
-              <option>Database</option>
-            </select>
-
-          </div>
-
-          {/* RELATED TAGS */}
-          <div className="right-card">
-
-            <div className="right-card-heading">
-
-              <h2>
-                🏷 Related Tags
-              </h2>
-
-              <a href="#">
-                View All
-              </a>
-
-            </div>
-
-            <div className="related-tags">
-
-              {relatedTags.map(
-                (tag, index) => (
-                  <span key={tag}>
-                    {tag}
-                    <small>
-                      ({342 - index * 37})
-                    </small>
-                  </span>
-                )
-              )}
-
-            </div>
-
-          </div>
-
-          {/* TOP CONTRIBUTORS */}
-          <div className="right-card">
-
-            <div className="right-card-heading">
-
-              <h2>
-                🏆 Top Contributors
-              </h2>
-
-              <a href="#">
-                View All
-              </a>
-
-            </div>
-
-            <div className="contributors">
-
-              <div className="contributor">
-
-                <b className="rank rank-one">
-                  1
-                </b>
-
-                <img
-                  src={studentphoto}
-                  alt="Priya"
-                />
-
-                <div>
-                  <strong>
-                    Priya Sharma
-                  </strong>
-
-                  <small>
-                    1.2k answers
-                  </small>
-                </div>
-
-              </div>
-
-              <div className="contributor">
-
-                <b className="rank">
-                  2
-                </b>
-
-                <img
-                  src={studentphoto}
-                  alt="Rohan"
-                />
-
-                <div>
-                  <strong>
-                    Rohan Gupta
-                  </strong>
-
-                  <small>
-                    980 answers
-                  </small>
-                </div>
-
-              </div>
-
-              <div className="contributor">
-
-                <b className="rank rank-three">
-                  3
-                </b>
-
-                <img
-                  src={studentphoto}
-                  alt="Neha"
-                />
-
-                <div>
-                  <strong>
-                    Neha Singh
-                  </strong>
-
-                  <small>
-                    870 answers
-                  </small>
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* NEED HELP */}
-          <div className="help-card">
-
-            <div>
-
-              <h2>
-                💡 Need Help?
-              </h2>
-
-              <p>
-                Can't find what you're
-                looking for? Ask the
-                community!
-              </p>
-
-              <Link to="/ask-question">
-                Ask a Question →
-              </Link>
-
-            </div>
-
-            <img
-              src={girlwithbook}
-              alt="Need Help"
-            />
-
-          </div>
-
-        </aside>
-
+        )}
       </div>
-
     </div>
   );
 }

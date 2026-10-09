@@ -1,666 +1,411 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import {
+  getQueries,
+  getInboxQueries,
+  getMyQueries,
+  getAuthToken,
+  getStoredUser,
+} from "../api/api";
 
 function Questions() {
   const navigate = useNavigate();
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeTab, setActiveTab] = useState("Latest");
   const [search, setSearch] = useState("");
 
+  const token = getAuthToken();
+  const user = getStoredUser();
+
   const categories = [
-    "AI/ML",
+    "All",
     "DSA",
-    "Python",
+    "AI/ML",
+    "Machine Learning",
     "Frontend",
     "Backend",
+    "Python",
     "Cyber Security",
-    "ML",
   ];
 
-  const questions = [
-    {
-      title: "How to implement JWT authentication in backend?",
-      tags: ["Backend", "Authentication", "Node.js", "JWT"],
-      description:
-        "I am building a backend using Node.js and Express. I want to implement JWT authentication. Can someone explain the complete flow with code example?",
-      votes: 24,
-      answers: 12,
-      views: 456,
-      author: "Rahul Sharma",
-      time: "2 hours ago",
-    },
-    {
-      title: "Difference between supervised and unsupervised learning?",
-      tags: ["ML", "AI/ML", "Concepts"],
-      description:
-        "Can someone explain the key differences between supervised and unsupervised learning with examples?",
-      votes: 18,
-      answers: 6,
-      views: 320,
-      author: "Ananya Verma",
-      time: "4 hours ago",
-    },
-    {
-      title: "Best way to learn Python for web development?",
-      tags: ["Python", "Web Development", "Roadmap"],
-      description:
-        "What is the best way to learn Python for web development? Any roadmap or resources?",
-      votes: 30,
-      answers: 18,
-      views: 512,
-      author: "Neha Gupta",
-      time: "10 hours ago",
-    },
-    {
-      title: "How to handle refresh tokens securely?",
-      tags: ["Backend", "Security", "JWT"],
-      description:
-        "What are the best practices to handle refresh tokens securely in a production application?",
-      votes: 12,
-      answers: 8,
-      views: 210,
-      author: "Karan Patel",
-      time: "12 hours ago",
-    },
-    {
-      title: "Difference between SQL and NoSQL?",
-      tags: ["Database", "SQL", "NoSQL"],
-      description:
-        "When should we use SQL vs NoSQL? What are the real world use cases?",
-      votes: 15,
-      answers: 10,
-      views: 300,
-      author: "Aman Verma",
-      time: "1 day ago",
-    },
-  ];
+  const fetchQuestions = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-  const contributors = [
-    {
-      name: "Aman Verma",
-      reputation: "1.2k",
-    },
-    {
-      name: "Priya Singh",
-      reputation: "980",
-    },
-    {
-      name: "Karan Patel",
-      reputation: "560",
-    },
-    {
-      name: "Neha Sharma",
-      reputation: "420",
-    },
-    {
-      name: "Abhinav Gupta",
-      reputation: "310",
-    },
-  ];
+      let res;
+      if (activeTab === "My Domain Inbox") {
+        if (!token) {
+          setError("Please login to view your domain inbox.");
+          setQuestions([]);
+          setLoading(false);
+          return;
+        }
+        res = await getInboxQueries();
+      } else if (activeTab === "My Doubts") {
+        if (!token) {
+          setError("Please login to view your questions.");
+          setQuestions([]);
+          setLoading(false);
+          return;
+        }
+        res = await getMyQueries();
+      } else {
+        res = await getQueries();
+      }
 
-  const trendingTopics = [
-    { name: "Python", questions: "1.2K questions" },
-    { name: "DSA", questions: "980 questions" },
-    { name: "AI/ML", questions: "850 questions" },
-    { name: "Web Development", questions: "740 questions" },
-    { name: "Cyber Security", questions: "620 questions" },
-  ];
+      const list = res?.queries || [];
+      setQuestions(list);
+    } catch (err) {
+      console.error("Fetch questions error:", err);
+      setError(err.message || "Failed to load questions from backend.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredQuestions = questions.filter((question) => {
-    const matchesSearch =
-      question.title.toLowerCase().includes(search.toLowerCase()) ||
-      question.tags.some((tag) =>
-        tag.toLowerCase().includes(search.toLowerCase())
-      );
+  useEffect(() => {
+    fetchQuestions();
+  }, [activeTab]);
+
+  // Filter by category, search, and resolved tab
+  const filteredQuestions = questions.filter((q) => {
+    const titleMatch = q.title?.toLowerCase().includes(search.toLowerCase());
+    const descMatch = q.description?.toLowerCase().includes(search.toLowerCase());
+    const domainMatch = q.domain?.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = !search || titleMatch || descMatch || domainMatch;
 
     const matchesCategory =
       activeCategory === "All" ||
-      question.tags.includes(activeCategory);
+      q.domain?.toLowerCase() === activeCategory.toLowerCase();
 
-    return matchesSearch && matchesCategory;
+    const matchesResolved =
+      activeTab !== "Resolved" || q.status === "resolved";
+
+    return matchesSearch && matchesCategory && matchesResolved;
   });
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "Recently";
+    try {
+      const d = new Date(dateString);
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return "Recently";
+    }
+  };
+
   return (
-    <div className="questions-page">
+    <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
+      <Navbar />
 
-      {/* =========================
-          TOP NAVBAR
-      ========================= */}
+      <div style={{ maxWidth: "1200px", margin: "24px auto", padding: "0 20px" }}>
+        {/* Top Header & Ask Button */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "20px",
+            flexWrap: "wrap",
+            gap: "12px",
+          }}
+        >
+          <div>
+            <h1 style={{ fontSize: "26px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+              All Campus Doubts
+            </h1>
+            <p style={{ color: "#64748b", fontSize: "14px", margin: "4px 0 0" }}>
+              Explore, discuss and solve engineering & programming doubts.
+            </p>
+          </div>
 
-      <header className="questions-navbar">
-
-        <div className="questions-logo" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
-          🎓 <span>Campus</span>Doubt
+          <button
+            onClick={() => navigate("/askquestion")}
+            style={{
+              backgroundColor: "#f59e0b",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "10px",
+              padding: "12px 22px",
+              fontSize: "14px",
+              fontWeight: "700",
+              cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(245, 158, 11, 0.3)",
+            }}
+          >
+            + Ask Question
+          </button>
         </div>
 
-        <nav className="questions-top-links">
-          <a onClick={() => navigate("/")} style={{ cursor: "pointer" }}>Home</a>
+        {/* View Tabs */}
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            borderBottom: "1px solid #e2e8f0",
+            marginBottom: "16px",
+            overflowX: "auto",
+          }}
+        >
+          {["Latest", "My Domain Inbox", "My Doubts", "Resolved"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                background: "none",
+                border: "none",
+                borderBottom: activeTab === tab ? "2.5px solid #f59e0b" : "2.5px solid transparent",
+                padding: "10px 16px",
+                fontSize: "14px",
+                fontWeight: activeTab === tab ? "700" : "500",
+                color: activeTab === tab ? "#f59e0b" : "#64748b",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {tab === "My Domain Inbox" && user?.domain
+                ? `📥 Inbox (${user.domain})`
+                : tab}
+            </button>
+          ))}
+        </div>
 
-          <a onClick={() => navigate("/question")} className="active" style={{ cursor: "pointer" }}>
-            Questions
-          </a>
+        {/* Domain Filter Pills */}
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            flexWrap: "wrap",
+            marginBottom: "24px",
+          }}
+        >
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "999px",
+                fontSize: "13px",
+                fontWeight: "600",
+                border: activeCategory === cat ? "1px solid #f59e0b" : "1px solid #e2e8f0",
+                backgroundColor: activeCategory === cat ? "#fef3c7" : "#ffffff",
+                color: activeCategory === cat ? "#b45309" : "#475569",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
 
-          <a onClick={() => navigate("/categories")} style={{ cursor: "pointer" }}>Categories</a>
-
-          <a style={{ cursor: "pointer" }}>About</a>
-        </nav>
-
-        <div className="questions-top-search">
-
-          <span>⌕</span>
-
+        {/* Search Bar */}
+        <div style={{ marginBottom: "20px" }}>
           <input
             type="text"
-            placeholder="Search questions, topics, or users..."
+            placeholder="Search doubts by title, keyword, or domain..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "12px 18px",
+              borderRadius: "10px",
+              border: "1.5px solid #cbd5e1",
+              fontSize: "14px",
+              outline: "none",
+              boxSizing: "border-box",
+              backgroundColor: "#ffffff",
+            }}
           />
-
         </div>
 
-        <button className="ask-top-btn" onClick={() => navigate("/askquestion")}>
-          Ask Question
-        </button>
-
-        <div className="notification-icon">
-          ♧
-        </div>
-
-        <div className="user-profile" style={{ cursor: "pointer" }} onClick={() => navigate("/profile")}>
-          <div className="user-avatar">
-            P
+        {/* Error message */}
+        {error && (
+          <div
+            style={{
+              backgroundColor: "#fee2e2",
+              color: "#b91c1c",
+              padding: "14px",
+              borderRadius: "10px",
+              marginBottom: "20px",
+              fontSize: "14px",
+            }}
+          >
+            ⚠️ {error}
           </div>
+        )}
 
-          <span>Priya</span>
-
-          <span>⌄</span>
-        </div>
-
-      </header>
-
-
-      {/* =========================
-          PAGE LAYOUT
-      ========================= */}
-
-      <div className="questions-layout">
-
-
-        {/* =========================
-            LEFT SIDEBAR
-        ========================= */}
-
-        <aside className="questions-sidebar">
-
-          <div className="sidebar-menu">
-
-            <a onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
-              <span>⌂</span>
-              Home
-            </a>
-
-            <a onClick={() => navigate("/question")} className="selected" style={{ cursor: "pointer" }}>
-              <span>⌕</span>
-              Questions
-            </a>
-
-            <a onClick={() => navigate("/askquestion")} style={{ cursor: "pointer" }}>
-              <span>⊕</span>
-              Ask a Question
-            </a>
-
-            <a onClick={() => navigate("/question")} style={{ cursor: "pointer" }}>
-              <span>♨</span>
-              Trending
-            </a>
-
-            <a onClick={() => navigate("/bookmarks")} style={{ cursor: "pointer" }}>
-              <span>♡</span>
-              Bookmarks
-            </a>
-
-            <a onClick={() => navigate("/myanswer")} style={{ cursor: "pointer" }}>
-              <span>♙</span>
-              My Answers
-            </a>
-
-            <a onClick={() => navigate("/profile")} style={{ cursor: "pointer" }}>
-              <span>♙</span>
-              Profile
-            </a>
-
+        {/* Question Cards List */}
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "60px 0", color: "#64748b" }}>
+            <div style={{ fontSize: "28px", marginBottom: "8px" }}>⏳</div>
+            <p>Loading questions from backend...</p>
           </div>
-
-
-          {/* Categories */}
-
-          <div className="sidebar-categories">
-
-            <h3>Categories</h3>
-
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-              >
-                <span>▣</span>
-                {category}
-              </button>
-            ))}
-
-            <button className="see-all-btn">
-              See All →
-            </button>
-
-          </div>
-
-
-          {/* Illustration */}
-
-          <div className="sidebar-illustration">
-
-            <div className="light-bulb">
-              💡
-            </div>
-
-            <div className="student-illustration">
-              👨‍💻
-            </div>
-
-            <p>
-              Have a doubt?
-              <br />
-              Ask the community!
+        ) : filteredQuestions.length === 0 ? (
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "16px",
+              padding: "60px 20px",
+              textAlign: "center",
+              border: "1px dashed #cbd5e1",
+            }}
+          >
+            <span style={{ fontSize: "40px" }}>🔍</span>
+            <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#0f172a", margin: "12px 0 6px" }}>
+              No doubts found
+            </h3>
+            <p style={{ color: "#64748b", fontSize: "14px", maxWidth: "400px", margin: "0 auto 16px" }}>
+              {activeTab === "My Domain Inbox"
+                ? "No questions currently pending in your technical domain."
+                : "No questions match your current filters or search query."}
             </p>
-
-          </div>
-
-        </aside>
-
-
-        {/* =========================
-            MAIN CONTENT
-        ========================= */}
-
-        <main className="questions-main">
-
-
-          {/* Hero */}
-
-          <section className="questions-hero">
-
-            <div className="hero-content">
-
-              <h1>Questions</h1>
-
-              <p>
-                Explore questions, get answers,
-                and learn with the community.
-              </p>
-
-            </div>
-
-            <div className="hero-illustration">
-              👩‍💻
-            </div>
-
-          </section>
-
-
-          {/* Search */}
-
-          <div className="questions-search">
-
-            <span>⌕</span>
-
-            <input
-              type="text"
-              placeholder="Search questions, tags, or users..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-
-            <button>
-              ⌕
-            </button>
-
-          </div>
-
-
-          {/* Category Filters */}
-
-          <div className="category-filters">
-
             <button
-              className={activeCategory === "All" ? "active" : ""}
-              onClick={() => setActiveCategory("All")}
+              onClick={() => navigate("/askquestion")}
+              style={{
+                backgroundColor: "#f59e0b",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "10px 18px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
             >
-              All
+              Ask the first question
             </button>
-
-            {categories.map((category) => (
-              <button
-                key={category}
-                className={
-                  activeCategory === category
-                    ? "active"
-                    : ""
-                }
-                onClick={() =>
-                  setActiveCategory(category)
-                }
-              >
-                {category}
-              </button>
-            ))}
-
           </div>
-
-
-          {/* Tabs */}
-
-          <div className="question-tabs">
-
-            {[
-              "Latest",
-              "Most Voted",
-              "Most Answered",
-              "Unanswered",
-            ].map((tab) => (
-              <button
-                key={tab}
-                className={
-                  activeTab === tab
-                    ? "active"
-                    : ""
-                }
-                onClick={() => setActiveTab(tab)}
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {filteredQuestions.map((q) => (
+              <div
+                key={q._id}
+                style={{
+                  backgroundColor: "#ffffff",
+                  borderRadius: "14px",
+                  padding: "20px 24px",
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.03)",
+                  transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                  cursor: "pointer",
+                }}
+                onClick={() => navigate(`/questiondetail?id=${q._id}`)}
               >
-                {tab}
-              </button>
-            ))}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+                  <h3
+                    style={{
+                      fontSize: "17px",
+                      fontWeight: "700",
+                      color: "#0f172a",
+                      margin: "0 0 8px 0",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    {q.title}
+                  </h3>
 
-          </div>
+                  <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                    {q.status === "resolved" ? (
+                      <span
+                        style={{
+                          backgroundColor: "#dcfce7",
+                          color: "#15803d",
+                          padding: "3px 10px",
+                          borderRadius: "999px",
+                          fontSize: "12px",
+                          fontWeight: "700",
+                        }}
+                      >
+                        ✓ Resolved
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          backgroundColor: "#fef3c7",
+                          color: "#b45309",
+                          padding: "3px 10px",
+                          borderRadius: "999px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Open
+                      </span>
+                    )}
 
+                    {q.domain && (
+                      <span
+                        style={{
+                          backgroundColor: "#eff6ff",
+                          color: "#1d4ed8",
+                          padding: "3px 10px",
+                          borderRadius: "999px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                        }}
+                      >
+                        🏷️ {q.domain}
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-          {/* Question Cards */}
-
-          <div className="questions-list">
-
-            {filteredQuestions.length === 0 ? (
-
-              <div className="no-questions">
-                <h3>No questions found</h3>
-
-                <p>
-                  Try another search or category.
+                <p
+                  style={{
+                    color: "#475569",
+                    fontSize: "14px",
+                    lineHeight: "1.6",
+                    margin: "0 0 16px 0",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  {q.description}
                 </p>
-              </div>
-
-            ) : (
-
-              filteredQuestions.map((question, index) => (
-
-                <article
-                  className="question-list-card"
-                  key={index}
-                >
-
-                  {/* Votes */}
-
-                  <div className="question-votes">
-
-                    <button>⌃</button>
-
-                    <strong>
-                      {question.votes}
-                    </strong>
-
-                    <button>⌄</button>
-
-                  </div>
-
-
-                  {/* Question Content */}
-
-                  <div className="question-list-content">
-
-                    <a
-                      onClick={() => navigate("/questiondetail")}
-                      style={{ cursor: "pointer" }}
-                      className="question-title"
-                    >
-                      {question.title}
-                    </a>
-
-
-                    <div className="question-tags">
-
-                      {question.tags.map((tag) => (
-                        <span key={tag}>
-                          {tag}
-                        </span>
-                      ))}
-
-                    </div>
-
-
-                    <p className="question-description">
-                      {question.description}
-                    </p>
-
-
-                    <div className="question-card-bottom">
-
-                      <div className="question-stats">
-
-                        <span>
-                          ♧ {question.answers} answers
-                        </span>
-
-                        <span>
-                          ◉ {question.views} views
-                        </span>
-
-                      </div>
-
-
-                      <div className="question-author">
-
-                        <div className="small-avatar">
-                          {question.author.charAt(0)}
-                        </div>
-
-                        <span>
-                          {question.author}
-                        </span>
-
-                        <span>
-                          • {question.time}
-                        </span>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  {/* Bookmark */}
-
-                  <button className="question-bookmark">
-                    ♡
-                  </button>
-
-                </article>
-
-              ))
-
-            )}
-
-          </div>
-
-        </main>
-
-
-        {/* =========================
-            RIGHT SIDEBAR
-        ========================= */}
-
-        <aside className="questions-right-sidebar">
-
-
-          {/* Ask Question */}
-
-          <div className="right-card ask-card">
-
-            <h2>
-              Ask a Question
-            </h2>
-
-            <p>
-              Have a doubt? Ask the community
-              and get helpful answers.
-            </p>
-
-            <button className="ask-question-btn" onClick={() => navigate("/askquestion")}>
-              ⊕ &nbsp; Ask Question
-            </button>
-
-          </div>
-
-
-          {/* Trending */}
-
-          <div className="right-card">
-
-            <div className="right-card-header">
-
-              <h2>
-                Trending Topics
-              </h2>
-
-              <a href="#">
-                See All →
-              </a>
-
-            </div>
-
-
-            <div className="trending-list">
-
-              {trendingTopics.map((topic) => (
 
                 <div
-                  className="trending-item"
-                  key={topic.name}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    borderTop: "1px solid #f1f5f9",
+                    paddingTop: "12px",
+                    fontSize: "13px",
+                    color: "#64748b",
+                  }}
                 >
-
-                  <span className="hash">
-                    #
-                  </span>
-
-                  <span className="topic-name">
-                    {topic.name}
-                  </span>
-
-                  <span className="topic-count">
-                    {topic.questions}
-                  </span>
-
-                </div>
-
-              ))}
-
-            </div>
-
-          </div>
-
-
-          {/* Contributors */}
-
-          <div className="right-card">
-
-            <div className="right-card-header">
-
-              <h2>
-                Top Contributors
-              </h2>
-
-              <a href="#">
-                See All →
-              </a>
-
-            </div>
-
-
-            <div className="contributors-list">
-
-              {contributors.map((person, index) => (
-
-                <div
-                  className="contributor"
-                  key={person.name}
-                >
-
-                  <div className="contributor-avatar">
-                    {person.name.charAt(0)}
-                  </div>
-
-                  <strong>
-                    {person.name}
-                  </strong>
-
-                  {index < 3 && (
-                    <span className="crown">
-                      ♛
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span>👤</span>
+                    <span style={{ fontWeight: "600", color: "#334155" }}>
+                      {q.userId?.name || "Student"}
                     </span>
-                  )}
+                    <span>•</span>
+                    <span>{formatDate(q.createdAt)}</span>
+                  </div>
 
-                  <span className="reputation">
-                    {person.reputation} rep
-                  </span>
-
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <span style={{ color: "#f59e0b", fontWeight: "600" }}>
+                      View Details & Answers →
+                    </span>
+                  </div>
                 </div>
-
-              ))}
-
-            </div>
-
+              </div>
+            ))}
           </div>
-
-
-          {/* Community Card */}
-
-          <div className="community-card">
-
-            <div>
-
-              <h2>
-                Join the Community
-              </h2>
-
-              <p>
-                Ask, answer, and grow together
-                with thousands of college students.
-              </p>
-
-              <button>
-                Get Started
-              </button>
-
-            </div>
-
-            <div className="community-image">
-              👨‍💻
-            </div>
-
-          </div>
-
-        </aside>
-
+        )}
       </div>
-
     </div>
   );
 }

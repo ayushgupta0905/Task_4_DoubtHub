@@ -1,318 +1,196 @@
-import { Link } from "react-router-dom";
-
-import girlwithbook from "../assets/girlwithbook.png";
-import studentphoto from "../assets/studentphoto.png";
-
-import "./categories.css";
-
-const categories = [
-  {
-    icon: "💻",
-    title: "Programming",
-    description:
-      "Questions about programming languages, problem solving and coding concepts.",
-    questions: "12.4k questions",
-  },
-  {
-    icon: "</>",
-    title: "Web Development",
-    description:
-      "Frontend, backend, full stack development, frameworks and web technologies.",
-    questions: "8.7k questions",
-  },
-  {
-    icon: "🗄️",
-    title: "Database",
-    description:
-      "DBMS, SQL, NoSQL, database design, optimization and related topics.",
-    questions: "4.2k questions",
-  },
-  {
-    icon: "🧠",
-    title: "Data Structures & Algorithms",
-    description:
-      "DSA concepts, problem solving, time complexity and algorithms.",
-    questions: "9.6k questions",
-  },
-  {
-    icon: "🤖",
-    title: "Artificial Intelligence & ML",
-    description:
-      "Machine learning, deep learning, AI models and related concepts.",
-    questions: "5.4k questions",
-  },
-  {
-    icon: "🔐",
-    title: "Cybersecurity",
-    description:
-      "Network security, ethical hacking, cryptography and cybersecurity topics.",
-    questions: "2.9k questions",
-  },
-  {
-    icon: "🌐",
-    title: "Computer Networks",
-    description:
-      "Networking concepts, protocols, security and internet technologies.",
-    questions: "3.1k questions",
-  },
-];
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import { getDomains, getQueries } from "../api/api";
 
 function Categories() {
+  const navigate = useNavigate();
+  const [domainList, setDomainList] = useState([]);
+  const [queryCounts, setQueryCounts] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  const defaultDomains = [
+    {
+      name: "DSA",
+      desc: "Data Structures & Algorithms, Arrays, Trees, Graphs, Dynamic Programming & Big-O.",
+      icon: "⚡",
+      color: "#f59e0b",
+    },
+    {
+      name: "AI/ML",
+      desc: "Artificial Intelligence, Neural Networks, Computer Vision & Deep Learning.",
+      icon: "🤖",
+      color: "#8b5cf6",
+    },
+    {
+      name: "Machine Learning",
+      desc: "Supervised & Unsupervised Learning, Regression, Classification, Scikit-Learn & Models.",
+      icon: "🧠",
+      color: "#ec4899",
+    },
+    {
+      name: "Frontend",
+      desc: "HTML, CSS, React, Next.js, Vue, responsive styling, state management & UI/UX.",
+      icon: "🎨",
+      color: "#06b6d4",
+    },
+    {
+      name: "Backend",
+      desc: "Node.js, Express, REST APIs, GraphQL, Databases, MongoDB, PostgreSQL & Authentication.",
+      icon: "⚙️",
+      color: "#10b981",
+    },
+    {
+      name: "Python",
+      desc: "Core Python, scripting, automation, Pandas, NumPy, Django & Flask frameworks.",
+      icon: "🐍",
+      color: "#3b82f6",
+    },
+    {
+      name: "Cyber Security",
+      desc: "Network security, cryptography, vulnerability testing, ethical hacking & web security.",
+      icon: "🛡️",
+      color: "#ef4444",
+    },
+  ];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Fetch queries to compute live counts
+        const qRes = await getQueries().catch(() => null);
+        const counts = {};
+        if (qRes?.queries) {
+          qRes.queries.forEach((q) => {
+            const d = q.domain || "Other";
+            counts[d] = (counts[d] || 0) + 1;
+          });
+        }
+        setQueryCounts(counts);
+
+        // Fetch domains if backend provides them
+        const dRes = await getDomains().catch(() => null);
+        if (dRes?.domains && dRes.domains.length > 0) {
+          // Merge with default presentation
+          setDomainList(dRes.domains);
+        } else {
+          setDomainList(defaultDomains);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleSelectDomain = (domainName) => {
+    navigate(`/question?category=${encodeURIComponent(domainName)}`);
+  };
+
   return (
-    <div className="categories-page">
+    <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
+      <Navbar />
 
-      {/* ================= NAVBAR ================= */}
-
-      <header className="categories-navbar">
-
-        <Link to="/" className="categories-logo">
-          <div className="categories-logo-icon">
-            🎓
-          </div>
-
-          <span>Smart College</span>
-        </Link>
-
-        <div className="categories-navbar-right">
-
-          <div className="categories-notification">
-            🔔
-            <span></span>
-          </div>
-
-          <div className="categories-profile">
-
-            <img
-              src={studentphoto}
-              alt="Priya"
-            />
-
-            <strong>Priya</strong>
-
-            <span>⌄</span>
-
-          </div>
-
+      <div style={{ maxWidth: "1100px", margin: "32px auto", padding: "0 20px" }}>
+        <div style={{ textAlign: "center", marginBottom: "36px" }}>
+          <h1 style={{ fontSize: "28px", fontWeight: "800", color: "#0f172a", margin: "0 0 8px 0" }}>
+            Technical Domains & Categories
+          </h1>
+          <p style={{ color: "#64748b", fontSize: "15px", maxWidth: "600px", margin: "0 auto" }}>
+            Browse doubts and discussions categorized by subject domain.
+          </p>
         </div>
 
-      </header>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+            gap: "20px",
+          }}
+        >
+          {defaultDomains.map((dom) => {
+            const count = queryCounts[dom.name] || 0;
 
-
-      {/* ================= PAGE LAYOUT ================= */}
-
-      <div className="categories-layout">
-
-
-        {/* ================= LEFT SIDEBAR ================= */}
-
-        <aside className="categories-sidebar">
-
-          <nav>
-
-            <Link
-              to="/"
-              className="category-side-link"
-            >
-              <span>⌂</span>
-              Home
-            </Link>
-
-
-            <Link
-              to="/ask-question"
-              className="category-side-link"
-            >
-              <span>?</span>
-              Ask Question
-            </Link>
-
-
-            <Link
-              to="/questions"
-              className="category-side-link"
-            >
-              <span>▣</span>
-              Questions
-            </Link>
-
-
-            <Link
-              to="/my-answers"
-              className="category-side-link"
-            >
-              <span>☑</span>
-              My Answers
-            </Link>
-
-
-            <Link
-              to="/bookmarks"
-              className="category-side-link"
-            >
-              <span>♡</span>
-              Bookmarks
-            </Link>
-
-
-            <Link
-              to="/categories"
-              className="category-side-link active"
-            >
-              <span>⊞</span>
-              Categories
-            </Link>
-
-
-            <Link
-              to="/trending"
-              className="category-side-link"
-            >
-              <span>⌁</span>
-              Trending
-            </Link>
-
-
-            <Link
-              to="/search-results"
-              className="category-side-link"
-            >
-              <span>⌕</span>
-              Search Results
-            </Link>
-
-
-            <Link
-              to="/profile"
-              className="category-side-link"
-            >
-              <span>♙</span>
-              Profile
-            </Link>
-
-          </nav>
-
-
-          {/* Bottom student illustration */}
-
-          <div className="categories-sidebar-student">
-
-            <img
-              src={girlwithbook}
-              alt="Student"
-            />
-
-          </div>
-
-        </aside>
-
-
-
-        {/* ================= MAIN CONTENT ================= */}
-
-        <main className="categories-main">
-
-          <div className="categories-heading">
-
-            <h1>Categories</h1>
-
-            <p>
-              Explore questions by topic. Find what interests you
-              and join the discussion.
-            </p>
-
-          </div>
-
-
-          {/* CATEGORY GRID */}
-
-          <div className="categories-grid">
-
-            {categories.map((category, index) => (
-
+            return (
               <div
-                className={`category-card category-card-${index + 1}`}
-                key={category.title}
+                key={dom.name}
+                onClick={() => handleSelectDomain(dom.name)}
+                style={{
+                  backgroundColor: "#ffffff",
+                  borderRadius: "16px",
+                  padding: "24px",
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)",
+                  cursor: "pointer",
+                  transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                }}
               >
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                    <div
+                      style={{
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "12px",
+                        backgroundColor: "#f8fafc",
+                        border: "1px solid #e2e8f0",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "24px",
+                      }}
+                    >
+                      {dom.icon}
+                    </div>
 
-                <div className="category-icon">
-                  {category.icon}
-                </div>
+                    <span
+                      style={{
+                        backgroundColor: "#f1f5f9",
+                        color: "#475569",
+                        padding: "3px 10px",
+                        borderRadius: "999px",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                      }}
+                    >
+                      {count} {count === 1 ? "Doubt" : "Doubts"}
+                    </span>
+                  </div>
 
+                  <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#0f172a", margin: "0 0 8px 0" }}>
+                    {dom.name}
+                  </h3>
 
-                <div className="category-card-content">
-
-                  <h2>
-                    {category.title}
-                  </h2>
-
-                  <p>
-                    {category.description}
+                  <p style={{ color: "#64748b", fontSize: "13px", lineHeight: "1.6", margin: "0 0 16px 0" }}>
+                    {dom.desc}
                   </p>
-
                 </div>
 
-
-                <div className="category-card-bottom">
-
-                  <span>
-                    {category.questions}
-                  </span>
-
-                  <button>
-                    →
-                  </button>
-
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    color: dom.color,
+                    fontWeight: "700",
+                    fontSize: "13px",
+                    borderTop: "1px solid #f8fafc",
+                    paddingTop: "12px",
+                  }}
+                >
+                  <span>Explore Doubts in {dom.name}</span>
+                  <span>→</span>
                 </div>
-
               </div>
-
-            ))}
-
-          </div>
-
-        </main>
-
-
-
-        {/* ================= RIGHT SIDEBAR ================= */}
-
-        <aside className="categories-right">
-
-
-          {/* NEED HELP */}
-
-          <div className="category-help-card">
-
-            <div className="category-help-content">
-
-              <h2>
-                💡 Need Help?
-              </h2>
-
-              <p>
-                Can't find the right category?
-                Ask the community or explore
-                the available topics.
-              </p>
-
-              <Link to="/ask-question">
-                Ask a Question →
-              </Link>
-
-            </div>
-
-
-            <img
-              src={girlwithbook}
-              alt="Need Help"
-            />
-
-          </div>
-
-        </aside>
-
+            );
+          })}
+        </div>
       </div>
-
     </div>
   );
 }

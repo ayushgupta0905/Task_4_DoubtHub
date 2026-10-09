@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import studentPhoto from "../assets/studentphoto.png";
-import { signupUser } from "../api/api";
+import yellowBackground from "../assets/yellowbackground.png";
+import { signupUser, sendOtp, verifyOtp, setAuthToken, setStoredUser } from "../api/api";
+import OtpModal from "../components/OtpModal";
 
 function Signup() {
   const navigate = useNavigate();
@@ -12,104 +14,148 @@ function Signup() {
     branch: "",
     password: "",
     confirmPassword: "",
-    year: "",
-    graduationYear: "",
+    year: "1st Year",
+    graduationYear: "2027",
     domain: "",
   });
 
-  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // OTP State
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState("");
+
+  const domainOptions = [
+    { label: "DSA", value: "DSA" },
+    { label: "AI / ML", value: "AI/ML" },
+    { label: "Machine Learning", value: "Machine Learning" },
+    { label: "Frontend", value: "Frontend" },
+    { label: "Backend", value: "Backend" },
+    { label: "Python", value: "Python" },
+    { label: "Cyber Security", value: "Cyber Security" },
+  ];
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handleSignup = async (e) => {
+  const handleInitiateSignup = async (e) => {
     e.preventDefault();
-
     setError("");
     setSuccess("");
 
     // Check all fields
     if (
-      !formData.name ||
-      !formData.email ||
-      !formData.college ||
-      !formData.branch ||
+      !formData.name.trim() ||
+      !formData.email.trim() ||
+      !formData.college.trim() ||
+      !formData.branch.trim() ||
       !formData.password ||
       !formData.confirmPassword ||
       !formData.year ||
       !formData.graduationYear ||
       !formData.domain
     ) {
-      setError("Please fill all the fields.");
+      setError("Please fill all required fields.");
       return;
     }
 
-    // Check password
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setError("Please enter a valid college email address.");
+      return;
+    }
+
+    // Check password match
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
     // Check terms
     if (!agreeTerms) {
-      setError(
-        "Please agree to the Terms of Service and Privacy Policy."
-      );
+      setError("Please agree to the Terms of Service and Privacy Policy.");
       return;
     }
 
     try {
       setLoading(true);
-
-      console.log("Sending signup data:", formData);
-
-      const data = await signupUser(formData);
-
-      console.log("Signup successful:", data);
-
-      setSuccess(
-        "Account created successfully! Redirecting to login..."
-      );
-
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
-
+      // Generate real OTP
+      const otpRes = await sendOtp(formData.email);
+      setGeneratedOtp(otpRes.code);
+      setShowOtpModal(true);
     } catch (err) {
-      console.error("Signup error:", err);
-
-      setError(
-        err.message || "Signup failed. Please try again."
-      );
+      setError(err.message || "Failed to initiate verification code.");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="signup-page">
+  // Called when user enters 6 digits in OtpModal
+  const handleVerifyOtpAndCreateAccount = async (enteredOtp) => {
+    // 1. Verify OTP locally
+    await verifyOtp(formData.email, enteredOtp);
 
+    // 2. Complete Signup on Backend API
+    const data = await signupUser({
+      ...formData,
+      email: formData.email.trim().toLowerCase(),
+    });
+
+    // 3. Store authentication session
+    if (data.token) {
+      setAuthToken(data.token);
+    }
+    if (data.user) {
+      setStoredUser(data.user);
+    }
+    if (formData.domain) {
+      localStorage.setItem("domain", formData.domain);
+    }
+
+    setShowOtpModal(false);
+    setSuccess("Account verified & created successfully! Redirecting...");
+
+    setTimeout(() => {
+      navigate("/");
+    }, 1200);
+  };
+
+  const handleResendOtp = async () => {
+    const res = await sendOtp(formData.email);
+    setGeneratedOtp(res.code);
+  };
+
+  return (
+    <div
+      className="signup-page"
+      style={{ backgroundImage: `url(${yellowBackground})` }}
+    >
       {/* Left Side */}
       <div className="signup-left">
-
-        <div className="signup-brand" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
+        <div
+          className="signup-brand"
+          style={{ cursor: "pointer" }}
+          onClick={() => navigate("/")}
+        >
           🎓 <span>Campus</span>Doubt
         </div>
 
         <div className="signup-left-content">
-
-          <p className="signup-tag">
-            A COLLEGE COMMUNITY
-          </p>
+          <p className="signup-tag">A COLLEGE COMMUNITY</p>
 
           <h1>
             Ask. Learn.
@@ -120,360 +166,279 @@ function Signup() {
           </h1>
 
           <p className="signup-description">
-            Join thousands of students, ask questions,
-            get answers, and build your knowledge with
-            the power of community and AI/ML.
+            Join thousands of college students, ask doubts, get verified answers,
+            explore similar questions powered by AI/ML algorithms, and earn reputation.
           </p>
 
           <div className="signup-points">
-            <p>✓ Ask and solve technical doubts</p>
-            <p>✓ Connect with college students</p>
-            <p>✓ Improve your technical skills</p>
+            <p>✓ Ask and resolve domain-specific doubts</p>
+            <p>✓ AI/ML powered automatic domain tagging & similar question clustering</p>
+            <p>✓ Real OTP email verification for campus security</p>
+            <p>✓ Earn points and climb the student leaderboard</p>
           </div>
 
           <div className="signup-student-image">
-            <img
-              src={studentPhoto}
-              alt="Students learning together"
-            />
+            <img src={studentPhoto} alt="Students learning together" />
           </div>
-
         </div>
       </div>
 
-
       {/* Right Side */}
       <div className="signup-right">
-
-        <div className="signup-box">
-
+        <div className="signup-box" style={{ maxWidth: "520px" }}>
           <h2>
             Create Your <span>Account</span>
           </h2>
 
           <p className="signup-subtitle">
-            Join CampusDoubt and become part of the community.
+            Join CampusDoubt and connect with your college peers.
           </p>
 
-
-          <form onSubmit={handleSignup}>
-
+          <form onSubmit={handleInitiateSignup}>
             {/* Full Name */}
             <div className="signup-input-group">
-              <label>Full Name</label>
-
+              <label>Full Name *</label>
               <div className="signup-input">
                 <span>👤</span>
-
                 <input
                   type="text"
                   name="name"
-                  placeholder="Enter your full name"
+                  placeholder="e.g. Rahul Sharma"
                   value={formData.name}
                   onChange={handleChange}
+                  required
                 />
               </div>
             </div>
-
 
             {/* College Email */}
             <div className="signup-input-group">
-              <label>College Email</label>
-
+              <label>College Email *</label>
               <div className="signup-input">
                 <span>✉</span>
-
                 <input
                   type="email"
                   name="email"
-                  placeholder="Enter your college email"
+                  placeholder="e.g. rahul@college.edu"
                   value={formData.email}
                   onChange={handleChange}
+                  required
                 />
               </div>
             </div>
 
+            {/* College Name & Branch row */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div className="signup-input-group">
+                <label>College Name *</label>
+                <div className="signup-input">
+                  <span>🏫</span>
+                  <input
+                    type="text"
+                    name="college"
+                    placeholder="e.g. IIT Delhi"
+                    value={formData.college}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
 
-            {/* College Name */}
-            <div className="signup-input-group">
-              <label>College Name</label>
-
-              <div className="signup-input">
-                <span>🏫</span>
-
-                <input
-                  type="text"
-                  name="college"
-                  placeholder="Enter your college name"
-                  value={formData.college}
-                  onChange={handleChange}
-                />
+              <div className="signup-input-group">
+                <label>Branch / Department *</label>
+                <div className="signup-input">
+                  <span>▦</span>
+                  <input
+                    type="text"
+                    name="branch"
+                    placeholder="e.g. CSE / IT"
+                    value={formData.branch}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
               </div>
             </div>
 
+            {/* Password & Confirm */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div className="signup-input-group">
+                <label>Password *</label>
+                <div className="signup-input">
+                  <span>🔒</span>
+                  <input
+                    type="password"
+                    name="password"
+                    placeholder="Min 6 characters"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
 
-            {/* Branch */}
-            <div className="signup-input-group">
-              <label>Branch / Department</label>
-
-              <div className="signup-input">
-                <span>▦</span>
-
-                <select
-                  name="branch"
-                  value={formData.branch}
-                  onChange={handleChange}
-                >
-                  <option value="" disabled>
-                    Select your branch
-                  </option>
-
-                  <option value="cse">
-                    Computer Science & Engineering
-                  </option>
-
-                  <option value="csit">
-                    Computer Science & Information Technology
-                  </option>
-
-                  <option value="it">
-                    Information Technology
-                  </option>
-
-                  <option value="ece">
-                    Electronics & Communication
-                  </option>
-
-                  <option value="ee">
-                    Electrical Engineering
-                  </option>
-
-                  <option value="me">
-                    Mechanical Engineering
-                  </option>
-
-                  <option value="ce">
-                    Civil Engineering
-                  </option>
-
-                  <option value="other">
-                    Other
-                  </option>
-                </select>
+              <div className="signup-input-group">
+                <label>Confirm Password *</label>
+                <div className="signup-input">
+                  <span>🔒</span>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    placeholder="Re-enter password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
               </div>
             </div>
 
+            {/* Year & Graduation Year row */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div className="signup-input-group">
+                <label>Year of Study *</label>
+                <div className="signup-input">
+                  <span>📚</span>
+                  <select
+                    name="year"
+                    value={formData.year}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="1st Year">1st Year</option>
+                    <option value="2nd Year">2nd Year</option>
+                    <option value="3rd Year">3rd Year</option>
+                    <option value="4th Year">4th Year</option>
+                    <option value="Postgraduate">Postgraduate</option>
+                  </select>
+                </div>
+              </div>
 
-            {/* Password */}
-            <div className="signup-input-group">
-              <label>Password</label>
-
-              <div className="signup-input">
-                <span>🔒</span>
-
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Create a password"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
+              <div className="signup-input-group">
+                <label>Graduation Year *</label>
+                <div className="signup-input">
+                  <span>📅</span>
+                  <select
+                    name="graduationYear"
+                    value={formData.graduationYear}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                    <option value="2028">2028</option>
+                    <option value="2029">2029</option>
+                    <option value="2030">2030</option>
+                  </select>
+                </div>
               </div>
             </div>
-
-
-            {/* Confirm Password */}
-            <div className="signup-input-group">
-              <label>Confirm Password</label>
-
-              <div className="signup-input">
-                <span>🔒</span>
-
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-
-            {/* Year */}
-            <div className="signup-input-group">
-              <label>Year of Study</label>
-
-              <div className="signup-input">
-                <span>📚</span>
-
-                <select
-                  name="year"
-                  value={formData.year}
-                  onChange={handleChange}
-                >
-                  <option value="" disabled>
-                    Select your year
-                  </option>
-
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
-                </select>
-              </div>
-            </div>
-
-
-            {/* Graduation */}
-            <div className="signup-input-group">
-              <label>Graduation Year</label>
-
-              <div className="signup-input">
-                <span>📅</span>
-
-                <select
-                  name="graduationYear"
-                  value={formData.graduationYear}
-                  onChange={handleChange}
-                >
-                  <option value="" disabled>
-                    Select graduation year
-                  </option>
-
-                  <option value="2027">2027</option>
-                  <option value="2028">2028</option>
-                  <option value="2029">2029</option>
-                  <option value="2030">2030</option>
-                  <option value="2031">2031</option>
-                  <option value="2032">2032</option>
-                </select>
-              </div>
-            </div>
-
 
             {/* Domain */}
             <div className="signup-input-group">
-              <label>Select Your Domain</label>
-
+              <label>Technical Domain / Specialization *</label>
               <div className="signup-input">
-                <span>▱</span>
-
+                <span>🎯</span>
                 <select
                   name="domain"
                   value={formData.domain}
                   onChange={handleChange}
+                  required
                 >
                   <option value="" disabled>
-                    Choose your domain
+                    Select your primary domain
                   </option>
-
-                  <option value="ai-ml">
-                    AI / ML
-                  </option>
-
-                  <option value="dsa">
-                    DSA
-                  </option>
-
-                  <option value="python">
-                    Python
-                  </option>
-
-                  <option value="frontend">
-                    Frontend
-                  </option>
-
-                  <option value="backend">
-                    Backend
-                  </option>
-
-                  <option value="cyber-security">
-                    Cyber Security
-                  </option>
-
-                  <option value="machine-learning">
-                    Machine Learning
-                  </option>
+                  {domainOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
-
                 <span>⌄</span>
               </div>
             </div>
 
-
-            {/* Error */}
+            {/* Error Message */}
             {error && (
-              <p
+              <div
                 style={{
-                  color: "#e53935",
-                  fontSize: "14px",
-                  marginTop: "8px",
+                  backgroundColor: "#fee2e2",
+                  color: "#b91c1c",
+                  padding: "10px 14px",
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  marginTop: "12px",
+                  fontWeight: "500",
                 }}
               >
-                {error}
-              </p>
+                ⚠️ {error}
+              </div>
             )}
 
-
-            {/* Success */}
+            {/* Success Message */}
             {success && (
-              <p
+              <div
                 style={{
-                  color: "#2e7d32",
-                  fontSize: "14px",
-                  marginTop: "8px",
+                  backgroundColor: "#dcfce7",
+                  color: "#15803d",
+                  padding: "10px 14px",
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  marginTop: "12px",
+                  fontWeight: "500",
                 }}
               >
-                {success}
-              </p>
+                ✓ {success}
+              </div>
             )}
 
-
-            {/* Terms */}
-            <div className="signup-terms">
-              <label>
+            {/* Terms checkbox */}
+            <div className="signup-terms" style={{ marginTop: "14px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
                 <input
                   type="checkbox"
                   checked={agreeTerms}
-                  onChange={(e) =>
-                    setAgreeTerms(e.target.checked)
-                  }
+                  onChange={(e) => setAgreeTerms(e.target.checked)}
                 />
-
-                <span>
-                  I agree to{" "}
-                  <a href="#" onClick={(e) => { e.preventDefault(); alert("Terms of Service coming soon"); }}>Terms of Service</a>{" "}
-                  and{" "}
-                  <a href="#" onClick={(e) => { e.preventDefault(); alert("Privacy Policy coming soon"); }}>Privacy Policy</a>
+                <span style={{ fontSize: "13px", color: "#475569" }}>
+                  I agree to the Terms of Service & Privacy Policy
                 </span>
               </label>
             </div>
 
-
-            {/* Button */}
+            {/* Submit Button */}
             <button
               type="submit"
               className="signup-button"
               disabled={loading}
+              style={{ marginTop: "16px" }}
             >
-              {loading
-                ? "Creating Account..."
-                : "Create Account"}
+              {loading ? "Preparing Verification..." : "Verify Email & Create Account 🔐"}
             </button>
-
           </form>
 
-
-          {/* Login */}
-          <p className="signup-login">
+          {/* Already have an account */}
+          <p className="signup-login" style={{ marginTop: "18px" }}>
             Already have an account?
-            <a href="#" onClick={(e) => { e.preventDefault(); navigate("/login"); }}> Login</a>
+            <Link to="/login" style={{ fontWeight: "700", marginLeft: "6px" }}>
+              Login
+            </Link>
           </p>
-
         </div>
       </div>
 
+      {/* OTP Verification Modal */}
+      <OtpModal
+        isOpen={showOtpModal}
+        email={formData.email}
+        generatedOtp={generatedOtp}
+        onVerify={handleVerifyOtpAndCreateAccount}
+        onResend={handleResendOtp}
+        onClose={() => setShowOtpModal(false)}
+        title="Verify College Email"
+        subtitle="Enter the 6-digit OTP code sent to"
+      />
     </div>
   );
 }
