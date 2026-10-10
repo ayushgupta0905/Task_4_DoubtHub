@@ -5,10 +5,21 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from training.recommend import retrain
+from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://legendary-taiyaki-165cee.netlify.app",
+        "http://localhost:5173",
+        "http://localhost:5174",
+    ],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 model = joblib.load('model/domain_classifier.joblib')
 vectoriser = joblib.load('model/domain_classifier_vectorizer.joblib')
 
