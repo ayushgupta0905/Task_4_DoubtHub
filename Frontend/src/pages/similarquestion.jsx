@@ -23,14 +23,32 @@ function SimilarQuestion() {
       setError("");
 
       // 1. ML Model 1: Domain Classification
-      const domain = await predictDomain(q);
-      setPredictedDomain(domain);
+      let domainErr = null;
+      try {
+        const domain = await predictDomain(q);
+        setPredictedDomain(domain);
+      } catch (err) {
+        domainErr = err.message;
+        setPredictedDomain("");
+      }
 
       // 2. ML Model 2: Similar Queries Clustering
-      const recs = await getMLRecommendations(q);
-      setRecommendations(recs);
-    } catch (err) {
-      setError(err.message || "Failed to fetch ML recommendations.");
+      let recsErr = null;
+      try {
+        const recs = await getMLRecommendations(q);
+        setRecommendations(recs);
+      } catch (err) {
+        recsErr = err.message;
+        setRecommendations([]);
+      }
+
+      if (domainErr && recsErr) {
+        setError(`ML Service Error: ${domainErr} | ${recsErr}`);
+      } else if (domainErr) {
+        setError(`ML Classifier Note: ${domainErr}`);
+      } else if (recsErr) {
+        setError(`ML Recommendations Note: ${recsErr}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -181,7 +199,7 @@ function SimilarQuestion() {
                   Predicted Technical Domain:
                 </span>
                 <div style={{ fontSize: "20px", fontWeight: "800", color: "#1e40af", marginTop: "4px" }}>
-                  {predictedDomain || "General"}
+                  {predictedDomain || "Not available"}
                 </div>
               </div>
 

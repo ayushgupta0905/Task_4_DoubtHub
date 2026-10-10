@@ -15,6 +15,7 @@ function AskQuestion() {
   const [description, setDescription] = useState("");
   const [predictedDomain, setPredictedDomain] = useState("");
   const [predicting, setPredicting] = useState(false);
+  const [predictionError, setPredictionError] = useState("");
   const [recommendations, setRecommendations] = useState([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
@@ -29,16 +30,19 @@ function AskQuestion() {
     const combined = `${title} ${description}`.trim();
     if (combined.length < 5) {
       setPredictedDomain("");
+      setPredictionError("");
       return;
     }
 
     const timer = setTimeout(async () => {
       try {
         setPredicting(true);
+        setPredictionError("");
         const domain = await predictDomain(combined);
         setPredictedDomain(domain);
-      } catch {
-        // silent
+      } catch (err) {
+        setPredictedDomain("");
+        setPredictionError(err.message || "Failed to classify domain.");
       } finally {
         setPredicting(false);
       }
@@ -62,7 +66,7 @@ function AskQuestion() {
       setRecommendations(recs);
       setShowRecommendations(true);
     } catch (err) {
-      setError(err.message || "Failed to load ML recommendations.");
+      setError(`ML Recommendations Error: ${err.message || "Failed to load ML recommendations."}`);
     } finally {
       setLoadingRecommendations(false);
     }
@@ -302,8 +306,8 @@ function AskQuestion() {
                 style={{
                   padding: "12px 16px",
                   borderRadius: "10px",
-                  backgroundColor: "#f0fdf4",
-                  border: "1px solid #bbf7d0",
+                  backgroundColor: predictionError ? "#fff1f2" : "#f0fdf4",
+                  border: predictionError ? "1px solid #fecdd3" : "1px solid #bbf7d0",
                   marginBottom: "20px",
                   display: "flex",
                   alignItems: "center",
@@ -313,13 +317,15 @@ function AskQuestion() {
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "16px" }}>🤖</span>
-                    <strong style={{ fontSize: "13px", color: "#166534" }}>
+                    <strong style={{ fontSize: "13px", color: predictionError ? "#9f1239" : "#166534" }}>
                       AI/ML Model 1 Domain Classifier:
                     </strong>
                   </div>
-                  <span style={{ fontSize: "12px", color: "#15803d" }}>
+                  <span style={{ fontSize: "12px", color: predictionError ? "#be123c" : "#15803d" }}>
                     {predicting
                       ? "Classifying doubt in real-time..."
+                      : predictionError
+                      ? `Error: ${predictionError}`
                       : predictedDomain
                       ? `Classified into domain: `
                       : "Type title or description to see automatic ML domain tag."}
