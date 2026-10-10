@@ -1,85 +1,69 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { getDomains, getQueries } from "../api/api";
+import { getQueries } from "../api/api";
+
+const defaultDomains = [
+  {
+    name: "DSA",
+    desc: "Data Structures & Algorithms, Arrays, Trees, Graphs, Dynamic Programming & Big-O.",
+    icon: "⚡",
+    color: "#f59e0b",
+  },
+  {
+    name: "AI/ML",
+    desc: "Artificial Intelligence, Neural Networks, Computer Vision & Deep Learning.",
+    icon: "🤖",
+    color: "#8b5cf6",
+  },
+  {
+    name: "Machine Learning",
+    desc: "Supervised & Unsupervised Learning, Regression, Classification, Scikit-Learn & Models.",
+    icon: "🧠",
+    color: "#ec4899",
+  },
+  {
+    name: "Frontend",
+    desc: "HTML, CSS, React, Next.js, Vue, responsive styling, state management & UI/UX.",
+    icon: "🎨",
+    color: "#06b6d4",
+  },
+  {
+    name: "Backend",
+    desc: "Node.js, Express, REST APIs, GraphQL, Databases, MongoDB, PostgreSQL & Authentication.",
+    icon: "⚙️",
+    color: "#10b981",
+  },
+  {
+    name: "Python",
+    desc: "Core Python, scripting, automation, Pandas, NumPy, Django & Flask frameworks.",
+    icon: "🐍",
+    color: "#3b82f6",
+  },
+  {
+    name: "Cyber Security",
+    desc: "Network security, cryptography, vulnerability testing, ethical hacking & web security.",
+    icon: "🛡️",
+    color: "#ef4444",
+  },
+];
 
 function Categories() {
   const navigate = useNavigate();
-  const [domainList, setDomainList] = useState([]);
   const [queryCounts, setQueryCounts] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  const defaultDomains = [
-    {
-      name: "DSA",
-      desc: "Data Structures & Algorithms, Arrays, Trees, Graphs, Dynamic Programming & Big-O.",
-      icon: "⚡",
-      color: "#f59e0b",
-    },
-    {
-      name: "AI/ML",
-      desc: "Artificial Intelligence, Neural Networks, Computer Vision & Deep Learning.",
-      icon: "🤖",
-      color: "#8b5cf6",
-    },
-    {
-      name: "Machine Learning",
-      desc: "Supervised & Unsupervised Learning, Regression, Classification, Scikit-Learn & Models.",
-      icon: "🧠",
-      color: "#ec4899",
-    },
-    {
-      name: "Frontend",
-      desc: "HTML, CSS, React, Next.js, Vue, responsive styling, state management & UI/UX.",
-      icon: "🎨",
-      color: "#06b6d4",
-    },
-    {
-      name: "Backend",
-      desc: "Node.js, Express, REST APIs, GraphQL, Databases, MongoDB, PostgreSQL & Authentication.",
-      icon: "⚙️",
-      color: "#10b981",
-    },
-    {
-      name: "Python",
-      desc: "Core Python, scripting, automation, Pandas, NumPy, Django & Flask frameworks.",
-      icon: "🐍",
-      color: "#3b82f6",
-    },
-    {
-      name: "Cyber Security",
-      desc: "Network security, cryptography, vulnerability testing, ethical hacking & web security.",
-      icon: "🛡️",
-      color: "#ef4444",
-    },
-  ];
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Fetch queries to compute live counts
-        const qRes = await getQueries().catch(() => null);
-        const counts = {};
-        if (qRes?.queries) {
-          qRes.queries.forEach((q) => {
-            const d = q.domain || "Other";
-            counts[d] = (counts[d] || 0) + 1;
-          });
-        }
-        setQueryCounts(counts);
-
-        // Fetch domains if backend provides them
-        const dRes = await getDomains().catch(() => null);
-        if (dRes?.domains && dRes.domains.length > 0) {
-          // Merge with default presentation
-          setDomainList(dRes.domains);
-        } else {
-          setDomainList(defaultDomains);
-        }
-      } finally {
-        setLoading(false);
+      // Fetch queries to compute live counts
+      const qRes = await getQueries().catch(() => null);
+      const counts = {};
+      if (qRes?.queries) {
+        qRes.queries.forEach((q) => {
+          const d = q.domain || "Other";
+          counts[d] = (counts[d] || 0) + 1;
+        });
       }
+      setQueryCounts(counts);
     };
 
     fetchData();

@@ -54,7 +54,8 @@ const apiRequest = async (endpoint, options = {}) => {
     response = await fetch(url, { ...options, headers });
   } catch (err) {
     throw new Error(
-      `Network request failed to ${url}. Please verify internet connection and backend status. (${err.message})`
+      `Network request failed to ${url}. Please verify internet connection and backend status. (${err.message})`,
+      { cause: err }
     );
   }
 
