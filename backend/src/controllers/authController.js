@@ -1,8 +1,7 @@
+
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
-const generateOTP = require("../utils/generateOTP");
-const sendEmail = require("../utils/sendEmail");
 
 const signup = async (req, res) => {
     try {
@@ -40,40 +39,9 @@ const signup = async (req, res) => {
             email: normalizedEmail
         });
 
-        if (existingUser && !existingUser.otp) {
-            return res.status(409).json({
-                message: "Email already registered and verified. Please log in."
-            });
-        }
-
-        const otp = generateOTP();
-        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
-
         if (existingUser) {
-            existingUser.name = name;
-            existingUser.college = college;
-            existingUser.branch = branch;
-            existingUser.password = await bcrypt.hash(password, 10);
-            existingUser.year = year;
-            existingUser.graduationYear = graduationYear;
-            existingUser.domain = domain;
-            existingUser.otp = otp;
-            existingUser.otpExpires = otpExpires;
-
-            await existingUser.save();
-
-            try {
-                await sendEmail(normalizedEmail, otp);
-            } catch (emailError) {
-                console.error("OTP email error:", emailError);
-
-                return res.status(500).json({
-                    message: "Failed to send OTP email. Please try again."
-                });
-            }
-
-            return res.status(200).json({
-                message: "New OTP sent to your email. Verify it to complete signup."
+            return res.status(409).json({
+                message: "Email already registered. Please log in."
             });
         }
 
@@ -87,80 +55,13 @@ const signup = async (req, res) => {
             password: hashedPassword,
             year,
             graduationYear,
-            domain,
-            otp,
-            otpExpires
+            domain
         });
-
-        try {
-            await sendEmail(normalizedEmail, otp);
-        } catch (emailError) {
-            await User.findByIdAndDelete(user._id);
-            console.error("OTP email error:", emailError);
-
-            return res.status(500).json({
-                message: "Failed to send OTP email. Please try again."
-            });
-        }
-
-        return res.status(201).json({
-            message: "OTP sent to your email. Verify it to complete signup."
-        });
-    } catch (error) {
-        console.error("Signup error:", error);
-
-        return res.status(500).json({
-            message: "Server error"
-        });
-    }
-};
-
-const verifyOTP = async (req, res) => {
-    try {
-        const { email, otp } = req.body;
-
-        if (!email || !otp) {
-            return res.status(400).json({
-                message: "Email and OTP are required"
-            });
-        }
-
-        const user = await User.findOne({
-            email: email.trim().toLowerCase()
-        });
-
-        if (!user) {
-            return res.status(404).json({
-                message: "User not found. Please sign up again."
-            });
-        }
-
-        if (!user.otp || !user.otpExpires) {
-            return res.status(400).json({
-                message: "No active OTP found. Please sign up again."
-            });
-        }
-
-        if (user.otpExpires.getTime() < Date.now()) {
-            return res.status(400).json({
-                message: "OTP expired. Please sign up again."
-            });
-        }
-
-        if (user.otp !== String(otp).trim()) {
-            return res.status(400).json({
-                message: "Invalid OTP"
-            });
-        }
-
-        user.otp = null;
-        user.otpExpires = null;
-        await user.save();
 
         const token = generateToken(user._id);
 
-        return res.status(200).json({
-            message: "Email verified and signup successful",
+        return res.status(201).json({
+            message: "Signup successful",
             token,
             user: {
                 id: user._id,
@@ -175,7 +76,13 @@ const verifyOTP = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error("OTP verification error:", error);
+        console.error("Signup error:", error);
+
+        if (error.code === 11000) {
+            return res.status(409).json({
+                message: "Email already registered. Please log in."
+            });
+        }
 
         return res.status(500).json({
             message: "Server error"
@@ -200,12 +107,6 @@ const login = async (req, res) => {
         if (!user) {
             return res.status(401).json({
                 message: "Invalid email or password"
-            });
-        }
-
-        if (user.otp && user.otpExpires) {
-            return res.status(403).json({
-                message: "Please verify your email OTP before logging in"
             });
         }
 
@@ -260,8 +161,6 @@ const getProfile = async (req, res) => {
 
 module.exports = {
     signup,
-    verifyOTP,
     login,
     getProfile
 };
-

@@ -1,4 +1,6 @@
+
 const mongoose = require("mongoose");
+
 const domain = [
     "Backend",
     "Frontend",
@@ -52,14 +54,6 @@ const userSchema = new mongoose.Schema(
         points: {
             type: Number,
             default: 0
-        },
-        otp: {
-            type: String,
-            default: null
-        },
-        otpExpires: {
-            type: Date,
-            default: null
         }
     },
     {
@@ -68,4 +62,3 @@ const userSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("User", userSchema);
-
