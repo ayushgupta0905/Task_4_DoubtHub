@@ -2,12 +2,21 @@ from pathlib import Path
 from typing import Annotated
 import joblib
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from training.recommend import retrain
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 model = joblib.load('model/domain_classifier.joblib')
 vectoriser = joblib.load('model/domain_classifier_vectorizer.joblib')
