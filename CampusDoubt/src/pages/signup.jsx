@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import studentPhoto from "../assets/studentphoto.png";
 import yellowBackground from "../assets/yellowbackground.png";
-import { signupUser, verifyBackendOtp } from "../api/api";
-import OtpModal from "../components/OtpModal";
+import { signupUser } from "../api/api";
 
 function Signup() {
   const navigate = useNavigate();
@@ -24,8 +23,6 @@ function Signup() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // OTP State
-  const [showOtpModal, setShowOtpModal] = useState(false);
 
   const domainOptions = [
     { label: "DSA", value: "DSA" },
@@ -92,58 +89,25 @@ function Signup() {
 
     try {
       setLoading(true);
-      // 1. Call Backend POST /api/auth/signup which creates user and sends real OTP email via nodemailer
       const res = await signupUser({
         ...formData,
         email: formData.email.trim().toLowerCase(),
       });
 
-      console.log("Signup OTP response from backend:", res);
-      // Open OTP modal with completely blank inputs
-      setShowOtpModal(true);
+      console.log("Signup successful:", res);
+      setSuccess("Account created successfully! Redirecting...");
+
+      setTimeout(() => {
+        navigate("/");
+      }, 800);
     } catch (err) {
-      if (
-        err.status === 409 ||
-        (err.message && err.message.toLowerCase().includes("already registered"))
-      ) {
-        setError(
-          "This email is already registered. If your account is awaiting verification, you can enter your email OTP below or proceed to Login."
-        );
-        setShowOtpModal(true);
-      } else if (err.isTimeout) {
-        setError(
-          "The email server took longer than expected. If you received the OTP code in your inbox, enter it below to complete verification."
-        );
-        setShowOtpModal(true);
-      } else {
-        setError(err.message || "Failed to initiate signup. Please try again.");
-      }
+      console.error("Signup error:", err);
+      setError(err.message || "Failed to create account. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Called when user manually enters 6 digits in OtpModal
-  const handleVerifyOtpAndCreateAccount = async (enteredOtp) => {
-    // Call Backend POST /api/auth/verify-otp
-    const data = await verifyBackendOtp(formData.email.trim().toLowerCase(), enteredOtp);
-
-    console.log("Backend verification successful:", data);
-
-    setShowOtpModal(false);
-    setSuccess("Email verified and account created successfully! Redirecting...");
-
-    setTimeout(() => {
-      navigate("/");
-    }, 1200);
-  };
-
-  const handleResendOtp = async () => {
-    await signupUser({
-      ...formData,
-      email: formData.email.trim().toLowerCase(),
-    });
-  };
 
   return (
     <div
@@ -179,7 +143,7 @@ function Signup() {
           <div className="signup-points">
             <p>✓ Ask and resolve domain-specific doubts</p>
             <p>✓ AI/ML powered automatic domain tagging & similar question clustering</p>
-            <p>✓ Real OTP email verification for campus security</p>
+            <p>✓ Verified student community & campus learning</p>
             <p>✓ Earn points and climb the student leaderboard</p>
           </div>
 
@@ -420,7 +384,7 @@ function Signup() {
               disabled={loading}
               style={{ marginTop: "16px" }}
             >
-              {loading ? "Sending OTP to Email..." : "Verify Email & Create Account 🔐"}
+              {loading ? "Creating Account..." : "Create Account 🎓"}
             </button>
           </form>
 
@@ -434,16 +398,6 @@ function Signup() {
         </div>
       </div>
 
-      {/* OTP Verification Modal */}
-      <OtpModal
-        isOpen={showOtpModal}
-        email={formData.email}
-        onVerify={handleVerifyOtpAndCreateAccount}
-        onResend={handleResendOtp}
-        onClose={() => setShowOtpModal(false)}
-        title="Enter Email Verification Code"
-        subtitle="A 6-digit OTP code has been sent to"
-      />
     </div>
   );
 }

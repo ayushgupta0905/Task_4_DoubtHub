@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import yellowBackground from "../assets/yellowbackground.png";
 import studentPhoto from "../assets/studentphoto.png";
-import { loginUser, verifyBackendOtp } from "../api/api";
-import OtpModal from "../components/OtpModal";
+import { loginUser } from "../api/api";
 
 function Login() {
   const navigate = useNavigate();
@@ -17,8 +16,6 @@ function Login() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // OTP Modal State for unverified users
-  const [showOtpModal, setShowOtpModal] = useState(false);
 
   const domainOptions = [
     { label: "DSA", value: "DSA" },
@@ -58,12 +55,7 @@ function Login() {
       await executeLogin();
     } catch (err) {
       console.error("Login error:", err);
-      if (err.message && err.message.toLowerCase().includes("verify your email otp")) {
-        setError("Your email has not been verified yet. Please enter the OTP sent to your email inbox.");
-        setShowOtpModal(true);
-      } else {
-        setError(err.message || "Login failed. Please check credentials and domain.");
-      }
+      setError(err.message || "Login failed. Please check credentials and domain.");
     } finally {
       setLoading(false);
     }
@@ -81,15 +73,6 @@ function Login() {
     }
 
     setSuccess("Login successful! Welcome back.");
-    setTimeout(() => {
-      navigate("/");
-    }, 800);
-  };
-
-  const handleVerifyOtpForLogin = async (enteredOtp) => {
-    await verifyBackendOtp(email.trim().toLowerCase(), enteredOtp);
-    setShowOtpModal(false);
-    setSuccess("Email verified successfully! Logging you in...");
     setTimeout(() => {
       navigate("/");
     }, 800);
@@ -129,7 +112,7 @@ function Login() {
           <div className="login-points">
             <div>✓ Verified student community</div>
             <div>✓ Real-time AI/ML query analysis</div>
-            <div>✓ Safe OTP-verified campus authentication</div>
+            <div>✓ Secure password-authenticated campus access</div>
           </div>
 
           <div className="login-student-image">
@@ -256,12 +239,7 @@ function Login() {
                 <span style={{ fontSize: "13px" }}>Remember me</span>
               </label>
 
-              <Link
-                to="/forgotpassword"
-                style={{ fontSize: "13px", color: "#f59e0b", fontWeight: "600" }}
-              >
-                Forgot Password?
-              </Link>
+
             </div>
 
             {/* Login Button */}
@@ -295,15 +273,6 @@ function Login() {
         </div>
       </div>
 
-      {/* Email Verification OTP Modal */}
-      <OtpModal
-        isOpen={showOtpModal}
-        email={email}
-        onVerify={handleVerifyOtpForLogin}
-        onClose={() => setShowOtpModal(false)}
-        title="Verify Email OTP"
-        subtitle="Enter the 6-digit OTP sent to your registered email to complete verification for"
-      />
     </div>
   );
 }

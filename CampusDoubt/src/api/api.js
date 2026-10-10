@@ -62,7 +62,7 @@ const apiRequest = async (endpoint, options = {}, timeoutMs = 25000) => {
   } catch (err) {
     if (err.name === "AbortError") {
       const abortErr = new Error(
-        "Request timed out. The backend email service (Nodemailer/SMTP) took more than 25 seconds to respond. Please check your email inbox to see if the OTP arrived, or try again."
+        "Request timed out. The server took more than 25 seconds to respond. Please check your network connection and try again."
       );
       abortErr.isTimeout = true;
       throw abortErr;
@@ -95,7 +95,7 @@ const apiRequest = async (endpoint, options = {}, timeoutMs = 25000) => {
 // ==========================================
 
 export const signupUser = async (formData) => {
-  return await apiRequest("/auth/signup", {
+  const data = await apiRequest("/auth/signup", {
     method: "POST",
     body: JSON.stringify({
       name: formData.name?.trim(),
@@ -109,32 +109,19 @@ export const signupUser = async (formData) => {
       domain: formData.domain,
     }),
   });
-};
-
-export const verifyBackendOtp = async (email, otp) => {
-  const data = await apiRequest("/auth/verify-otp", {
-    method: "POST",
-    body: JSON.stringify({
-      email: email?.trim().toLowerCase(),
-      otp: String(otp).trim(),
-    }),
-  });
 
   if (data?.token) {
     setAuthToken(data.token);
   }
   if (data?.user) {
     setStoredUser(data.user);
-    if (data.user.domain) {
-      localStorage.setItem("domain", data.user.domain);
-    }
+  }
+  if (formData.domain) {
+    localStorage.setItem("domain", formData.domain);
   }
 
   return data;
 };
-
-// Alias for backwards compatibility
-export const verifyOtp = verifyBackendOtp;
 
 export const loginUser = async (email, password, domain) => {
   const data = await apiRequest("/auth/login", {
