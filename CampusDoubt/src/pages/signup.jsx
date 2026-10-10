@@ -102,7 +102,22 @@ function Signup() {
       // Open OTP modal with completely blank inputs
       setShowOtpModal(true);
     } catch (err) {
-      setError(err.message || "Failed to initiate signup. Please try again.");
+      if (
+        err.status === 409 ||
+        (err.message && err.message.toLowerCase().includes("already registered"))
+      ) {
+        setError(
+          "This email is already registered. If your account is awaiting verification, you can enter your email OTP below or proceed to Login."
+        );
+        setShowOtpModal(true);
+      } else if (err.isTimeout) {
+        setError(
+          "The email server took longer than expected. If you received the OTP code in your inbox, enter it below to complete verification."
+        );
+        setShowOtpModal(true);
+      } else {
+        setError(err.message || "Failed to initiate signup. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -405,7 +420,7 @@ function Signup() {
               disabled={loading}
               style={{ marginTop: "16px" }}
             >
-              {loading ? "Preparing Verification..." : "Verify Email & Create Account 🔐"}
+              {loading ? "Sending OTP to Email..." : "Verify Email & Create Account 🔐"}
             </button>
           </form>
 

@@ -25,10 +25,9 @@ function ForgotPassword() {
 
     try {
       setLoading(true);
-      // Backend does not currently provide a password reset endpoint.
-      // Direct the user or display an informative notice.
+      // Backend auth router currently does not have a /forgot-password or /reset-password endpoint.
       setMessage(
-        "If an account exists for this email, password recovery instructions have been sent to your inbox."
+        "Notice: The backend server currently only supports Signup and Login OTP verification (/api/auth/verify-otp). Automated password recovery via email (/api/auth/forgot-password) is not yet implemented on the backend. Please sign in with your credentials or contact campus support."
       );
     } catch (err) {
       setError(err.message || "Failed to process request.");
@@ -155,7 +154,7 @@ function ForgotPassword() {
               disabled={loading}
               style={{ marginTop: "16px" }}
             >
-              {loading ? "Generating OTP..." : "Send Verification OTP 🔐"}
+              {loading ? "Submitting..." : "Send Verification OTP 🔐"}
             </button>
           </form>
 

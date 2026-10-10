@@ -38,10 +38,13 @@ export const setStoredUser = (user) => {
   }
 };
 
-// Generic fetch wrapper with auth header injection
-const apiRequest = async (endpoint, options = {}) => {
+// Generic fetch wrapper with auth header injection and timeout
+const apiRequest = async (endpoint, options = {}, timeoutMs = 25000) => {
   const url = `${BASE_API_URL}${endpoint}`;
   const token = getAuthToken();
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   const headers = {
     "Content-Type": "application/json",
@@ -51,12 +54,25 @@ const apiRequest = async (endpoint, options = {}) => {
 
   let response;
   try {
-    response = await fetch(url, { ...options, headers });
+    response = await fetch(url, {
+      ...options,
+      headers,
+      signal: options.signal || controller.signal,
+    });
   } catch (err) {
+    if (err.name === "AbortError") {
+      const abortErr = new Error(
+        "Request timed out. The backend email service (Nodemailer/SMTP) took more than 25 seconds to respond. Please check your email inbox to see if the OTP arrived, or try again."
+      );
+      abortErr.isTimeout = true;
+      throw abortErr;
+    }
     throw new Error(
       `Network request failed to ${url}. Please verify internet connection and backend status. (${err.message})`,
       { cause: err }
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   const data = await response.json().catch(() => null);
