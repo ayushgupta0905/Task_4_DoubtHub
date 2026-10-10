@@ -1,12 +1,21 @@
-const BASE_API_URL = import.meta.env.VITE_API_URL || "https://task-4-doubthub-6liq.onrender.com/api";
-const ML_API_URL = import.meta.env.VITE_ML_API_URL || "https://task-4-doubthub.onrender.com";
+
+const BASE_API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://task-4-doubthub-6liq.onrender.com/api";
+
+const ML_API_URL =
+  import.meta.env.VITE_ML_API_URL ||
+  "https://task-4-doubthub.onrender.com";
 
 // ==========================================
 // TOKEN & SESSION MANAGEMENT
 // ==========================================
 
 export const getAuthToken = () => {
-  return localStorage.getItem("token") || localStorage.getItem("access_token");
+  return (
+    localStorage.getItem("token") ||
+    localStorage.getItem("access_token")
+  );
 };
 
 export const setAuthToken = (token) => {
@@ -38,7 +47,10 @@ export const setStoredUser = (user) => {
   }
 };
 
-// Generic fetch wrapper with auth header injection and timeout
+// ==========================================
+// GENERIC API REQUEST
+// ==========================================
+
 const apiRequest = async (endpoint, options = {}, timeoutMs = 25000) => {
   const url = `${BASE_API_URL}${endpoint}`;
   const token = getAuthToken();
@@ -53,6 +65,7 @@ const apiRequest = async (endpoint, options = {}, timeoutMs = 25000) => {
   };
 
   let response;
+
   try {
     response = await fetch(url, {
       ...options,
@@ -62,13 +75,14 @@ const apiRequest = async (endpoint, options = {}, timeoutMs = 25000) => {
   } catch (err) {
     if (err.name === "AbortError") {
       const abortErr = new Error(
-        "Request timed out. The backend email service (Nodemailer/SMTP) took more than 25 seconds to respond. Please check your email inbox to see if the OTP arrived, or try again."
+        "Request timed out. Please check the backend service and try again."
       );
       abortErr.isTimeout = true;
       throw abortErr;
     }
+
     throw new Error(
-      `Network request failed to ${url}. Please verify internet connection and backend status. (${err.message})`,
+      `Network request failed to ${url}. Check your internet connection and backend status. (${err.message})`,
       { cause: err }
     );
   } finally {
@@ -81,6 +95,7 @@ const apiRequest = async (endpoint, options = {}, timeoutMs = 25000) => {
     const errorMsg =
       (data && (data.message || data.error || data.detail)) ||
       `Request failed with status ${response.status}`;
+
     const err = new Error(errorMsg);
     err.status = response.status;
     err.data = data;
@@ -95,7 +110,7 @@ const apiRequest = async (endpoint, options = {}, timeoutMs = 25000) => {
 // ==========================================
 
 export const signupUser = async (formData) => {
-  return await apiRequest("/auth/signup", {
+  const data = await apiRequest("/auth/signup", {
     method: "POST",
     body: JSON.stringify({
       name: formData.name?.trim(),
@@ -109,32 +124,21 @@ export const signupUser = async (formData) => {
       domain: formData.domain,
     }),
   });
-};
-
-export const verifyBackendOtp = async (email, otp) => {
-  const data = await apiRequest("/auth/verify-otp", {
-    method: "POST",
-    body: JSON.stringify({
-      email: email?.trim().toLowerCase(),
-      otp: String(otp).trim(),
-    }),
-  });
 
   if (data?.token) {
     setAuthToken(data.token);
   }
+
   if (data?.user) {
     setStoredUser(data.user);
-    if (data.user.domain) {
-      localStorage.setItem("domain", data.user.domain);
-    }
+  }
+
+  if (formData.domain) {
+    localStorage.setItem("domain", formData.domain);
   }
 
   return data;
 };
-
-// Alias for backwards compatibility
-export const verifyOtp = verifyBackendOtp;
 
 export const loginUser = async (email, password, domain) => {
   const data = await apiRequest("/auth/login", {
@@ -149,9 +153,11 @@ export const loginUser = async (email, password, domain) => {
   if (data?.token) {
     setAuthToken(data.token);
   }
+
   if (data?.user) {
     setStoredUser(data.user);
   }
+
   if (domain) {
     localStorage.setItem("domain", domain);
   }
@@ -170,7 +176,7 @@ export const logoutUser = () => {
 };
 
 // ==========================================
-// QUERIES (QUESTIONS) APIs
+// QUERIES APIs
 // ==========================================
 
 export const getQueries = async () => {
@@ -206,86 +212,109 @@ export const getSimilarQueriesByQueryId = async (id) => {
   const data = await apiRequest(`/queries/${id}/similar`, {
     method: "GET",
   });
-  return parseMlRecommendations(data?.queries || data?.recommendations);
+
+  return parseMlRecommendations(
+    data?.queries || data?.recommendations
+  );
 };
 
 // ==========================================
-// ML SERVICES (Direct + Proxy)
+// ML DOMAIN PREDICTION
 // ==========================================
+
+// ML endpoint resolution (uses local Vite dev proxy /ml to bypass CORS during development)
+const getMlUrl = (endpoint) => {
+  if (import.meta.env.DEV) {
+    return `/ml${endpoint}`;
+  }
+  return `${ML_API_URL}${endpoint}`;
+};
 
 export const predictDomain = async (queryText) => {
-  if (!queryText || !queryText.trim()) return "General";
+  const query = queryText?.trim();
 
-  // Try direct FastAPI ML Service first
-  try {
-    const res = await fetch(`${ML_API_URL}/predict`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ Query: queryText.trim() }),
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.prediction) return json.prediction;
-    }
-  } catch {
-    // fallback to backend proxy if direct fails
+  if (!query) return "";
+
+  const response = await fetch(getMlUrl("/predict"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      Query: query,
+    }),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (response.ok && data?.prediction) {
+    return data.prediction;
   }
 
-  // Fallback to Backend proxy
-  try {
-    const data = await apiRequest("/queries/predict", {
-      method: "POST",
-      body: JSON.stringify({ query: queryText.trim() }),
-    });
-    if (data.prediction) return data.prediction;
-  } catch {
-    // silent fallback
-  }
-
-  return "DSA";
+  const errorMsg =
+    (data && (data.message || data.detail || data.error)) ||
+    `ML service returned status ${response.status}`;
+  throw new Error(errorMsg);
 };
+
+// ==========================================
+// ML RECOMMENDATIONS
+// ==========================================
 
 export const getMLRecommendations = async (queryText) => {
-  if (!queryText || !queryText.trim()) return [];
+  const query = queryText?.trim();
 
-  // Try direct FastAPI ML Service first
-  try {
-    const res = await fetch(`${ML_API_URL}/recommend`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ Query: queryText.trim() }),
-    });
-    if (res.ok) {
-      const json = await res.json();
-      return parseMlRecommendations(json.recommendations);
-    }
-  } catch {
-    // fallback to backend proxy
-  }
+  if (!query) return [];
 
-  // Fallback to backend proxy
-  try {
-    const data = await apiRequest("/queries/recommend", {
-      method: "POST",
-      body: JSON.stringify({ query: queryText.trim() }),
-    });
+  const response = await fetch(getMlUrl("/recommend"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      Query: query,
+    }),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (response.ok && data?.recommendations) {
     return parseMlRecommendations(data.recommendations);
-  } catch {
-    return [];
   }
+
+  const errorMsg =
+    (data && (data.message || data.detail || data.error)) ||
+    `ML recommendations service returned status ${response.status}`;
+  throw new Error(errorMsg);
 };
+
+// ==========================================
+// PARSE ML RECOMMENDATIONS
+// ==========================================
 
 const parseMlRecommendations = (raw) => {
   if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
+
+  if (Array.isArray(raw)) {
+    return raw;
+  }
 
   if (typeof raw === "string") {
     try {
       const parsed = JSON.parse(raw);
-      if (parsed.similar_queries && typeof parsed.similar_queries === "object") {
+
+      if (
+        parsed.similar_queries &&
+        typeof parsed.similar_queries === "object"
+      ) {
         return Object.values(parsed.similar_queries);
       }
-      if (Array.isArray(parsed)) return parsed;
+
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+
+      return [];
     } catch {
       return [raw];
     }
@@ -303,7 +332,9 @@ const parseMlRecommendations = (raw) => {
 // ==========================================
 
 export const getAnswersByQuery = async (queryId) => {
-  return await apiRequest(`/answers/${queryId}`, { method: "GET" });
+  return await apiRequest(`/answers/${queryId}`, {
+    method: "GET",
+  });
 };
 
 export const postAnswer = async (queryId, content) => {
@@ -314,7 +345,9 @@ export const postAnswer = async (queryId, content) => {
 };
 
 export const getMyAnswers = async () => {
-  return await apiRequest("/answers/my", { method: "GET" });
+  return await apiRequest("/answers/my", {
+    method: "GET",
+  });
 };
 
 export const deleteAnswer = async (answerId) => {
@@ -334,7 +367,9 @@ export const acceptAnswer = async (answerId) => {
 // ==========================================
 
 export const getBookmarks = async () => {
-  return await apiRequest("/bookmarks", { method: "GET" });
+  return await apiRequest("/bookmarks", {
+    method: "GET",
+  });
 };
 
 export const addBookmark = async (queryId) => {
@@ -354,11 +389,14 @@ export const removeBookmark = async (queryId) => {
 // ==========================================
 
 export const getDomains = async () => {
-  return await apiRequest("/domains", { method: "GET" });
+  return await apiRequest("/domains", {
+    method: "GET",
+  });
 };
 
 export const getDomainByName = async (name) => {
-  return await apiRequest(`/domains/${encodeURIComponent(name)}`, {
-    method: "GET",
-  });
+  return await apiRequest(
+    `/domains/${encodeURIComponent(name)}`,
+    { method: "GET" }
+  );
 };

@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/home";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
-import ForgotPassword from "./pages/forgotpassword";
 import Questions from "./pages/question";
 import QuestionDetail from "./pages/questiondetail";
 import AskQuestion from "./pages/askquestion";
@@ -26,7 +25,6 @@ function App() {
         {/* Authentication */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/forgotpassword" element={<ForgotPassword />} />
 
         {/* Questions Feed */}
         <Route path="/question" element={<Questions />} />
