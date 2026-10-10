@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
-from sklearn.metrics import pairwise_distances
+from sklearn.metrics.pairwise import cosine_similarity
 import json
 
 def text_preprocessing(text):
@@ -46,22 +47,13 @@ def retrain(new_querry="",domain=""):
     new_query_vector = vectorizer.transform([new_querry]).toarray()
 
 
-    model = KMeans(n_clusters=6, random_state=42)
-    model.fit(X)
+    similarity = cosine_similarity(new_query_vector, X)[0]
+    top_indeces = np.argsort(-similarity)[:5]
+    # print(top_indeces)
+    # print(similarity)
 
 
-    cluster_label = model.predict(new_query_vector)[0]
-
-
-    cluster_points = X[model.labels_ == cluster_label]
-    cluster_queries = df['question'][model.labels_ == cluster_label]
-
-  
-    distances = pairwise_distances(new_query_vector, cluster_points, metric="cosine")[0]
-
-
-    nearest_indices = np.argsort(distances)[:5]
-    nearest_queries = cluster_queries.iloc[nearest_indices]
+    nearest_queries = df['question'].iloc[top_indeces]
 
 
     result = {}
@@ -73,4 +65,4 @@ def retrain(new_querry="",domain=""):
     return json.dumps({"similar_queries": result})
 
 
-# retrain(new_querry="What is react")
+retrain(new_querry="What is react", domain="Frontend")
