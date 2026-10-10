@@ -40,14 +40,44 @@ const signup = async (req, res) => {
             email: normalizedEmail
         });
 
-        if (existingUser) {
+        if (existingUser && !existingUser.otp) {
             return res.status(409).json({
-                message: "Email already registered"
+                message: "Email already registered and verified. Please log in."
+            });
+        }
+
+        const otp = generateOTP();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+        if (existingUser) {
+            existingUser.name = name;
+            existingUser.college = college;
+            existingUser.branch = branch;
+            existingUser.password = await bcrypt.hash(password, 10);
+            existingUser.year = year;
+            existingUser.graduationYear = graduationYear;
+            existingUser.domain = domain;
+            existingUser.otp = otp;
+            existingUser.otpExpires = otpExpires;
+
+            await existingUser.save();
+
+            try {
+                await sendEmail(normalizedEmail, otp);
+            } catch (emailError) {
+                console.error("OTP email error:", emailError);
+
+                return res.status(500).json({
+                    message: "Failed to send OTP email. Please try again."
+                });
+            }
+
+            return res.status(200).json({
+                message: "New OTP sent to your email. Verify it to complete signup."
             });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const otp = generateOTP();
 
         const user = await User.create({
             name,
@@ -59,7 +89,7 @@ const signup = async (req, res) => {
             graduationYear,
             domain,
             otp,
-            otpExpires: new Date(Date.now() + 10 * 60 * 1000)
+            otpExpires
         });
 
         try {
@@ -234,3 +264,4 @@ module.exports = {
     login,
     getProfile
 };
+
