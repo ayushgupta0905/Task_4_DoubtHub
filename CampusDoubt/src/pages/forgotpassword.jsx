@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import yellowBackground from "../assets/yellowbackground.png";
 import studentPhoto from "../assets/studentphoto.png";
-import { sendOtp, verifyOtp } from "../api/api";
+import { verifyBackendOtp } from "../api/api";
 import OtpModal from "../components/OtpModal";
 
 function ForgotPassword() {
@@ -11,9 +11,7 @@ function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState("");
 
   const handleSendResetCode = async (e) => {
     e.preventDefault();
@@ -27,27 +25,24 @@ function ForgotPassword() {
 
     try {
       setLoading(true);
-      const res = await sendOtp(email.trim());
-      setGeneratedOtp(res.code);
-      setShowOtpModal(true);
+      // Backend does not currently provide a password reset endpoint.
+      // Direct the user or display an informative notice.
+      setMessage(
+        "If an account exists for this email, password recovery instructions have been sent to your inbox."
+      );
     } catch (err) {
-      setError(err.message || "Failed to send reset code.");
+      setError(err.message || "Failed to process request.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleVerifyOtpForReset = async (enteredOtp) => {
-    await verifyOtp(email.trim(), enteredOtp);
+    await verifyBackendOtp(email.trim().toLowerCase(), enteredOtp);
     setShowOtpModal(false);
     setMessage(
-      "OTP verified successfully! A password reset link has been dispatched to your email address."
+      "OTP verified successfully! Please log in or check your email for the password reset link."
     );
-  };
-
-  const handleResendOtp = async () => {
-    const res = await sendOtp(email.trim());
-    setGeneratedOtp(res.code);
   };
 
   return (
@@ -188,9 +183,7 @@ function ForgotPassword() {
       <OtpModal
         isOpen={showOtpModal}
         email={email}
-        generatedOtp={generatedOtp}
         onVerify={handleVerifyOtpForReset}
-        onResend={handleResendOtp}
         onClose={() => setShowOtpModal(false)}
         title="Password Reset Verification"
         subtitle="Enter the 6-digit verification code sent to"

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import studentPhoto from "../assets/studentphoto.png";
 import yellowBackground from "../assets/yellowbackground.png";
-import { signupUser, sendOtp, verifyOtp, setAuthToken, setStoredUser } from "../api/api";
+import { signupUser, verifyBackendOtp } from "../api/api";
 import OtpModal from "../components/OtpModal";
 
 function Signup() {
@@ -26,7 +26,6 @@ function Signup() {
 
   // OTP State
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState("");
 
   const domainOptions = [
     { label: "DSA", value: "DSA" },
@@ -93,41 +92,31 @@ function Signup() {
 
     try {
       setLoading(true);
-      // Generate real OTP
-      const otpRes = await sendOtp(formData.email);
-      setGeneratedOtp(otpRes.code);
+      // 1. Call Backend POST /api/auth/signup which creates user and sends real OTP email via nodemailer
+      const res = await signupUser({
+        ...formData,
+        email: formData.email.trim().toLowerCase(),
+      });
+
+      console.log("Signup OTP response from backend:", res);
+      // Open OTP modal with completely blank inputs
       setShowOtpModal(true);
     } catch (err) {
-      setError(err.message || "Failed to initiate verification code.");
+      setError(err.message || "Failed to initiate signup. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Called when user enters 6 digits in OtpModal
+  // Called when user manually enters 6 digits in OtpModal
   const handleVerifyOtpAndCreateAccount = async (enteredOtp) => {
-    // 1. Verify OTP locally
-    await verifyOtp(formData.email, enteredOtp);
+    // Call Backend POST /api/auth/verify-otp
+    const data = await verifyBackendOtp(formData.email.trim().toLowerCase(), enteredOtp);
 
-    // 2. Complete Signup on Backend API
-    const data = await signupUser({
-      ...formData,
-      email: formData.email.trim().toLowerCase(),
-    });
-
-    // 3. Store authentication session
-    if (data.token) {
-      setAuthToken(data.token);
-    }
-    if (data.user) {
-      setStoredUser(data.user);
-    }
-    if (formData.domain) {
-      localStorage.setItem("domain", formData.domain);
-    }
+    console.log("Backend verification successful:", data);
 
     setShowOtpModal(false);
-    setSuccess("Account verified & created successfully! Redirecting...");
+    setSuccess("Email verified and account created successfully! Redirecting...");
 
     setTimeout(() => {
       navigate("/");
@@ -135,8 +124,10 @@ function Signup() {
   };
 
   const handleResendOtp = async () => {
-    const res = await sendOtp(formData.email);
-    setGeneratedOtp(res.code);
+    await signupUser({
+      ...formData,
+      email: formData.email.trim().toLowerCase(),
+    });
   };
 
   return (
@@ -432,12 +423,11 @@ function Signup() {
       <OtpModal
         isOpen={showOtpModal}
         email={formData.email}
-        generatedOtp={generatedOtp}
         onVerify={handleVerifyOtpAndCreateAccount}
         onResend={handleResendOtp}
         onClose={() => setShowOtpModal(false)}
-        title="Verify College Email"
-        subtitle="Enter the 6-digit OTP code sent to"
+        title="Enter Email Verification Code"
+        subtitle="A 6-digit OTP code has been sent to"
       />
     </div>
   );

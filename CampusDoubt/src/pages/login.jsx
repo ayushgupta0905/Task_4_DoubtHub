@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import yellowBackground from "../assets/yellowbackground.png";
 import studentPhoto from "../assets/studentphoto.png";
-import { loginUser, sendOtp, verifyOtp } from "../api/api";
+import { loginUser, verifyBackendOtp } from "../api/api";
 import OtpModal from "../components/OtpModal";
 
 function Login() {
@@ -12,15 +12,13 @@ function Login() {
   const [domain, setDomain] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [requireOtp, setRequireOtp] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // OTP Modal State
+  // OTP Modal State for unverified users
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState("");
 
   const domainOptions = [
     { label: "DSA", value: "DSA" },
@@ -57,25 +55,17 @@ function Login() {
 
     try {
       setLoading(true);
-
-      // If user enabled 2-factor OTP verification for extra campus security
-      if (requireOtp) {
-        const otpRes = await sendOtp(email.trim());
-        setGeneratedOtp(otpRes.code);
-        setShowOtpModal(true);
-        setLoading(false);
-        return;
-      }
-
-      // Standard direct backend login
       await executeLogin();
     } catch (err) {
       console.error("Login error:", err);
-      setError(err.message || "Login failed. Please check credentials and domain.");
-    } finally {
-      if (!requireOtp) {
-        setLoading(false);
+      if (err.message && err.message.toLowerCase().includes("verify your email otp")) {
+        setError("Your email has not been verified yet. Please enter the OTP sent to your email inbox.");
+        setShowOtpModal(true);
+      } else {
+        setError(err.message || "Login failed. Please check credentials and domain.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,16 +87,12 @@ function Login() {
   };
 
   const handleVerifyOtpForLogin = async (enteredOtp) => {
-    // 1. Verify OTP
-    await verifyOtp(email.trim(), enteredOtp);
-    // 2. Complete login
-    await executeLogin();
+    await verifyBackendOtp(email.trim().toLowerCase(), enteredOtp);
     setShowOtpModal(false);
-  };
-
-  const handleResendOtp = async () => {
-    const res = await sendOtp(email.trim());
-    setGeneratedOtp(res.code);
+    setSuccess("Email verified successfully! Logging you in...");
+    setTimeout(() => {
+      navigate("/");
+    }, 800);
   };
 
   return (
@@ -278,30 +264,6 @@ function Login() {
               </Link>
             </div>
 
-            {/* 2FA OTP Toggle */}
-            <div
-              style={{
-                marginTop: "12px",
-                padding: "8px 12px",
-                backgroundColor: "#f8fafc",
-                borderRadius: "8px",
-                border: "1px dashed #cbd5e1",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <span style={{ fontSize: "12px", color: "#475569" }}>
-                🔐 Require 2-Step OTP Verification
-              </span>
-              <input
-                type="checkbox"
-                checked={requireOtp}
-                onChange={(e) => setRequireOtp(e.target.checked)}
-                style={{ cursor: "pointer" }}
-              />
-            </div>
-
             {/* Login Button */}
             <button
               type="submit"
@@ -309,11 +271,7 @@ function Login() {
               disabled={loading}
               style={{ marginTop: "16px" }}
             >
-              {loading
-                ? "Signing in..."
-                : requireOtp
-                ? "Verify OTP & Login"
-                : "Login"}
+              {loading ? "Signing in..." : "Login"}
             </button>
           </form>
 
@@ -337,16 +295,14 @@ function Login() {
         </div>
       </div>
 
-      {/* 2FA OTP Modal */}
+      {/* Email Verification OTP Modal */}
       <OtpModal
         isOpen={showOtpModal}
         email={email}
-        generatedOtp={generatedOtp}
         onVerify={handleVerifyOtpForLogin}
-        onResend={handleResendOtp}
         onClose={() => setShowOtpModal(false)}
-        title="2-Step Verification"
-        subtitle="Enter the 6-digit OTP code to confirm your login for"
+        title="Verify Email OTP"
+        subtitle="Enter the 6-digit OTP sent to your registered email to complete verification for"
       />
     </div>
   );

@@ -82,24 +82,49 @@ export const signupUser = async (formData) => {
   return await apiRequest("/auth/signup", {
     method: "POST",
     body: JSON.stringify({
-      name: formData.name,
-      email: formData.email,
-      college: formData.college,
-      branch: formData.branch,
+      name: formData.name?.trim(),
+      email: formData.email?.trim().toLowerCase(),
+      college: formData.college?.trim(),
+      branch: formData.branch?.trim(),
       password: formData.password,
       confirmPassword: formData.confirmPassword,
       year: formData.year,
-      graduationYear: formData.graduationYear,
+      graduationYear: Number(formData.graduationYear),
       domain: formData.domain,
     }),
   });
 };
 
+export const verifyBackendOtp = async (email, otp) => {
+  const data = await apiRequest("/auth/verify-otp", {
+    method: "POST",
+    body: JSON.stringify({
+      email: email?.trim().toLowerCase(),
+      otp: String(otp).trim(),
+    }),
+  });
+
+  if (data?.token) {
+    setAuthToken(data.token);
+  }
+  if (data?.user) {
+    setStoredUser(data.user);
+    if (data.user.domain) {
+      localStorage.setItem("domain", data.user.domain);
+    }
+  }
+
+  return data;
+};
+
+// Alias for backwards compatibility
+export const verifyOtp = verifyBackendOtp;
+
 export const loginUser = async (email, password, domain) => {
   const data = await apiRequest("/auth/login", {
     method: "POST",
     body: JSON.stringify({
-      email,
+      email: email?.trim().toLowerCase(),
       password,
       domain,
     }),
@@ -126,88 +151,6 @@ export const getUserProfile = async () => {
 
 export const logoutUser = () => {
   clearAuthSession();
-};
-
-// ==========================================
-// REAL OTP SYSTEM (Client + Verification Support)
-// ==========================================
-// Generates secure 6-digit OTP, keeps expiry and allows full verification
-const otpStore = new Map();
-
-export const sendOtp = async (email) => {
-  if (!email || !email.trim()) {
-    throw new Error("Email is required to send OTP");
-  }
-
-  const cleanEmail = email.trim().toLowerCase();
-  const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-  otpStore.set(cleanEmail, {
-    code: generatedCode,
-    expiresAt,
-    attempts: 0,
-  });
-
-  // Also save in sessionStorage for cross-component resilience
-  sessionStorage.setItem(
-    `cd_otp_${cleanEmail}`,
-    JSON.stringify({ code: generatedCode, expiresAt })
-  );
-
-  return {
-    success: true,
-    message: `OTP sent successfully to ${cleanEmail}`,
-    email: cleanEmail,
-    code: generatedCode, // Exposed for display banner/toast so user can easily test
-    expiresInSeconds: 600,
-  };
-};
-
-export const verifyOtp = async (email, enteredOtp) => {
-  if (!email || !enteredOtp) {
-    throw new Error("Email and OTP code are required");
-  }
-
-  const cleanEmail = email.trim().toLowerCase();
-  const cleanCode = enteredOtp.toString().trim();
-
-  let stored = otpStore.get(cleanEmail);
-  if (!stored) {
-    const raw = sessionStorage.getItem(`cd_otp_${cleanEmail}`);
-    if (raw) {
-      stored = JSON.parse(raw);
-    }
-  }
-
-  if (!stored) {
-    throw new Error("No active OTP found for this email. Please request a new one.");
-  }
-
-  if (Date.now() > stored.expiresAt) {
-    otpStore.delete(cleanEmail);
-    sessionStorage.removeItem(`cd_otp_${cleanEmail}`);
-    throw new Error("OTP has expired. Please request a new code.");
-  }
-
-  if (stored.code !== cleanCode) {
-    stored.attempts = (stored.attempts || 0) + 1;
-    if (stored.attempts >= 5) {
-      otpStore.delete(cleanEmail);
-      sessionStorage.removeItem(`cd_otp_${cleanEmail}`);
-      throw new Error("Too many failed attempts. Please request a new OTP.");
-    }
-    throw new Error("Invalid verification code. Please check and try again.");
-  }
-
-  // Clear upon success
-  otpStore.delete(cleanEmail);
-  sessionStorage.removeItem(`cd_otp_${cleanEmail}`);
-
-  return {
-    success: true,
-    message: "OTP verified successfully!",
-  };
 };
 
 // ==========================================

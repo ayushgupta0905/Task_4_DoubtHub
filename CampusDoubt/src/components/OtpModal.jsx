@@ -3,12 +3,11 @@ import { useState, useEffect, useRef } from "react";
 export default function OtpModal({
   isOpen,
   email,
-  generatedOtp,
   onVerify,
   onResend,
   onClose,
   title = "Verify Your College Email",
-  subtitle = "We have sent a 6-digit verification code to",
+  subtitle = "An OTP has been sent by the server to",
 }) {
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
@@ -18,7 +17,7 @@ export default function OtpModal({
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef([]);
 
-  // Reset & start timer on open or email change
+  // Ensure digits are completely blank on open
   useEffect(() => {
     if (isOpen) {
       setDigits(["", "", "", "", "", ""]);
@@ -34,10 +33,9 @@ export default function OtpModal({
     }
   }, [isOpen, email]);
 
-  // Countdown timer
+  // Countdown timer for resending
   useEffect(() => {
     if (!isOpen || timer <= 0) {
-      if (timer === 0) setCanResend(true);
       return;
     }
     const interval = setInterval(() => {
@@ -55,7 +53,6 @@ export default function OtpModal({
   if (!isOpen) return null;
 
   const handleChange = (index, value) => {
-    // Only accept numeric digit
     const cleaned = value.replace(/\D/g, "");
     if (!cleaned) {
       const copy = [...digits];
@@ -70,7 +67,7 @@ export default function OtpModal({
     setDigits(copy);
     setError("");
 
-    // Advance to next input
+    // Automatically focus next digit box
     if (index < 5 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1].focus();
     }
@@ -91,7 +88,7 @@ export default function OtpModal({
     const pasteData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (!pasteData) return;
 
-    const copy = [...digits];
+    const copy = ["", "", "", "", "", ""];
     for (let i = 0; i < pasteData.length; i++) {
       copy[i] = pasteData[i];
     }
@@ -104,22 +101,11 @@ export default function OtpModal({
     }
   };
 
-  const handleAutoFill = () => {
-    if (!generatedOtp) return;
-    const chars = generatedOtp.toString().slice(0, 6).split("");
-    const filled = ["", "", "", "", "", ""];
-    chars.forEach((c, idx) => {
-      filled[idx] = c;
-    });
-    setDigits(filled);
-    setError("");
-  };
-
   const handleSubmit = async (e) => {
     e?.preventDefault();
     const fullCode = digits.join("");
     if (fullCode.length !== 6) {
-      setError("Please enter the complete 6-digit verification code.");
+      setError("Please enter the complete 6-digit OTP code received on your email.");
       return;
     }
 
@@ -127,16 +113,16 @@ export default function OtpModal({
       setLoading(true);
       setError("");
       await onVerify(fullCode);
-      setSuccess("Verified successfully!");
+      setSuccess("OTP verified successfully!");
     } catch (err) {
-      setError(err.message || "Invalid OTP. Please try again.");
+      setError(err.message || "Invalid OTP. Please check your email and try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleResendClick = async () => {
-    if (!canResend) return;
+    if (!canResend || !onResend) return;
     try {
       setLoading(true);
       setError("");
@@ -145,7 +131,7 @@ export default function OtpModal({
       setTimer(60);
       setCanResend(false);
       setDigits(["", "", "", "", "", ""]);
-      setSuccess("A new verification code has been dispatched!");
+      setSuccess("A new OTP has been dispatched to your email address!");
       if (inputRefs.current[0]) inputRefs.current[0].focus();
     } catch (err) {
       setError(err.message || "Failed to resend OTP.");
@@ -166,7 +152,6 @@ export default function OtpModal({
         justifyContent: "center",
         zIndex: 9999,
         padding: "16px",
-        animation: "fadeIn 0.2s ease-out",
       }}
     >
       <div
@@ -207,7 +192,7 @@ export default function OtpModal({
           ✕
         </button>
 
-        {/* Shield / Mail Icon */}
+        {/* Lock / Email Icon */}
         <div
           style={{
             width: "60px",
@@ -222,7 +207,7 @@ export default function OtpModal({
             margin: "0 auto 16px",
           }}
         >
-          🔐
+          ✉️
         </div>
 
         <h3
@@ -241,7 +226,7 @@ export default function OtpModal({
             fontSize: "14px",
             color: "#64748b",
             lineHeight: "1.5",
-            marginBottom: "16px",
+            marginBottom: "12px",
           }}
         >
           {subtitle}{" "}
@@ -250,48 +235,21 @@ export default function OtpModal({
           </strong>
         </p>
 
-        {/* Live OTP Toast / Preview for Testing */}
-        {generatedOtp && (
-          <div
-            style={{
-              backgroundColor: "#eff6ff",
-              border: "1px solid #bfdbfe",
-              borderRadius: "10px",
-              padding: "10px 14px",
-              marginBottom: "20px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              fontSize: "13px",
-              color: "#1e40af",
-            }}
-          >
-            <div>
-              <span>Verification Code: </span>
-              <strong style={{ fontSize: "16px", letterSpacing: "2px" }}>
-                {generatedOtp}
-              </strong>
-            </div>
-            <button
-              type="button"
-              onClick={handleAutoFill}
-              style={{
-                backgroundColor: "#2563eb",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "6px",
-                padding: "4px 10px",
-                fontSize: "12px",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
-            >
-              Auto Fill
-            </button>
-          </div>
-        )}
+        <p
+          style={{
+            fontSize: "12px",
+            color: "#b45309",
+            backgroundColor: "#fffbeb",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            marginBottom: "20px",
+            border: "1px solid #fde68a",
+          }}
+        >
+          📬 Please check your email inbox (and Spam or Promotions folder) for the 6-digit OTP code sent by DoubtHub.
+        </p>
 
-        {/* 6 Digit Inputs */}
+        {/* 6 Digit Inputs - Blank for manual entry */}
         <form onSubmit={handleSubmit}>
           <div
             onPaste={handlePaste}
@@ -310,6 +268,7 @@ export default function OtpModal({
                 inputMode="numeric"
                 maxLength={1}
                 value={digit}
+                placeholder="-"
                 onChange={(e) => handleChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
                 style={{
@@ -319,8 +278,8 @@ export default function OtpModal({
                   fontWeight: "700",
                   textAlign: "center",
                   borderRadius: "10px",
-                  border: digit ? "2px solid #2563eb" : "1.5px solid #cbd5e1",
-                  backgroundColor: digit ? "#f8fafc" : "#ffffff",
+                  border: digit ? "2px solid #f59e0b" : "1.5px solid #cbd5e1",
+                  backgroundColor: digit ? "#fffbeb" : "#ffffff",
                   color: "#0f172a",
                   outline: "none",
                   transition: "all 0.15s ease",
@@ -355,7 +314,7 @@ export default function OtpModal({
             </p>
           )}
 
-          {/* Action Buttons */}
+          {/* Action Button */}
           <button
             type="submit"
             disabled={loading || digits.join("").length !== 6}
@@ -377,46 +336,48 @@ export default function OtpModal({
               transition: "background 0.2s ease",
             }}
           >
-            {loading ? "Verifying Code..." : "Verify & Continue"}
+            {loading ? "Verifying with Backend..." : "Verify & Complete Signup"}
           </button>
         </form>
 
-        {/* Resend & Timer */}
-        <div
-          style={{
-            marginTop: "18px",
-            fontSize: "13px",
-            color: "#64748b",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: "6px",
-          }}
-        >
-          <span>Didn't receive the code?</span>
-          {canResend ? (
-            <button
-              type="button"
-              onClick={handleResendClick}
-              disabled={loading}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#2563eb",
-                fontWeight: "600",
-                cursor: "pointer",
-                padding: 0,
-                textDecoration: "underline",
-              }}
-            >
-              Resend Code
-            </button>
-          ) : (
-            <span style={{ color: "#d97706", fontWeight: "600" }}>
-              Resend in {timer}s
-            </span>
-          )}
-        </div>
+        {/* Resend OTP */}
+        {onResend && (
+          <div
+            style={{
+              marginTop: "18px",
+              fontSize: "13px",
+              color: "#64748b",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <span>Didn't receive the email?</span>
+            {canResend ? (
+              <button
+                type="button"
+                onClick={handleResendClick}
+                disabled={loading}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#2563eb",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  padding: 0,
+                  textDecoration: "underline",
+                }}
+              >
+                Resend OTP
+              </button>
+            ) : (
+              <span style={{ color: "#d97706", fontWeight: "600" }}>
+                Resend in {timer}s
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
