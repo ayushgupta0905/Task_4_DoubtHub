@@ -1,7 +1,7 @@
 const Bookmark = require("../models/Bookmark");
 const Query = require("../models/Query");
 
-// Add bookmark
+//  bookmark
 const addBookmark = async (req, res) => {
     try {
         const { queryId } = req.params;

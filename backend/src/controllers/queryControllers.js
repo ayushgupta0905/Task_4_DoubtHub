@@ -1,3 +1,4 @@
+
 const Query = require("../models/Query");
 const User = require("../models/User");
 
@@ -21,10 +22,48 @@ const createQuery = async (req, res) => {
             });
         }
 
-        // Model 1 predicts the domain
-        const prediction = await getPrediction(
-            title + " " + description
-        );
+        let prediction = "Backend";
+
+        try {
+            const result = await getPrediction(
+                title + " " + description
+            );
+
+            const domainMapping = {
+                "Programming Language": "Python",
+                "Machine Learning": "ML",
+                "AI": "AI/ML",
+                "Artificial Intelligence": "AI/ML",
+                "Web": "Web Development",
+                "Cybersecurity": "Cyber Security",
+                "Data Structures and Algorithms": "DSA"
+            };
+
+            const predictedDomain =
+                typeof result === "string"
+                    ? result
+                    : result?.domain || result?.prediction;
+
+            prediction =
+                domainMapping[predictedDomain] || predictedDomain;
+
+            const validDomains = [
+                "AI/ML",
+                "DSA",
+                "Python",
+                "Frontend",
+                "Backend",
+                "Cyber Security",
+                "ML",
+                "Web Development"
+            ];
+
+            if (!validDomains.includes(prediction)) {
+                prediction = "Backend";
+            }
+        } catch (error) {
+            console.error("ML prediction error:", error.message);
+        }
 
         const query = await Query.create({
             title,
@@ -39,10 +78,11 @@ const createQuery = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
+        console.error("Create question error:", error);
 
-        res.status(500).json({
-            message: "Failed to create question"
+        return res.status(500).json({
+            message: "Failed to create question",
+            error: error.message
         });
     }
 };
