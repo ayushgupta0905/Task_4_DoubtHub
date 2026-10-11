@@ -235,26 +235,40 @@ export const predictDomain = async (queryText) => {
 
   if (!query) return "";
 
-  const response = await fetch(getMlUrl("/predict"), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      Query: query,
-    }),
-  });
+  // 1. Try direct ML service (or local dev proxy)
+  try {
+    const response = await fetch(getMlUrl("/predict"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        Query: query,
+      }),
+    });
 
-  const data = await response.json().catch(() => null);
-
-  if (response.ok && data?.prediction) {
-    return data.prediction;
+    if (response.ok) {
+      const data = await response.json().catch(() => null);
+      if (data?.prediction) return data.prediction;
+    }
+  } catch {
+    // fallback to backend proxy if direct fails
   }
 
-  const errorMsg =
-    (data && (data.message || data.detail || data.error)) ||
-    `ML service returned status ${response.status}`;
-  throw new Error(errorMsg);
+  // 2. Fallback to authenticated backend proxy
+  if (getAuthToken()) {
+    try {
+      const data = await apiRequest("/queries/predict", {
+        method: "POST",
+        body: JSON.stringify({ query }),
+      });
+      if (data?.prediction) return data.prediction;
+    } catch {
+      // silent fallback
+    }
+  }
+
+  return "General";
 };
 
 // ==========================================
@@ -266,26 +280,44 @@ export const getMLRecommendations = async (queryText) => {
 
   if (!query) return [];
 
-  const response = await fetch(getMlUrl("/recommend"), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      Query: query,
-    }),
-  });
+  // 1. Try direct ML service (or local dev proxy)
+  try {
+    const response = await fetch(getMlUrl("/recommend"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        Query: query,
+      }),
+    });
 
-  const data = await response.json().catch(() => null);
-
-  if (response.ok && data?.recommendations) {
-    return parseMlRecommendations(data.recommendations);
+    if (response.ok) {
+      const data = await response.json().catch(() => null);
+      if (data?.recommendations) {
+        return parseMlRecommendations(data.recommendations);
+      }
+    }
+  } catch {
+    // fallback to backend proxy
   }
 
-  const errorMsg =
-    (data && (data.message || data.detail || data.error)) ||
-    `ML recommendations service returned status ${response.status}`;
-  throw new Error(errorMsg);
+  // 2. Fallback to authenticated backend proxy
+  if (getAuthToken()) {
+    try {
+      const data = await apiRequest("/queries/recommend", {
+        method: "POST",
+        body: JSON.stringify({ query }),
+      });
+      if (data?.recommendations) {
+        return parseMlRecommendations(data.recommendations);
+      }
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
 };
 
 // ==========================================
