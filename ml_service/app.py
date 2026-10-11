@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 from typing import Annotated
 import joblib
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -12,6 +13,13 @@ from training.recommend import retrain
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://campusdoubt.vercel.app", "http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 model = joblib.load('model/domain_classifier.joblib')
