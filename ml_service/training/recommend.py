@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import os
-import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
