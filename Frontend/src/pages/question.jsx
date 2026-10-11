@@ -29,7 +29,6 @@ function Questions() {
     "Frontend",
     "Backend",
     "Python",
-    "Programming Language",
     "Cyber Security",
   ];
 

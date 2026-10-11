@@ -32,7 +32,6 @@ function Signup() {
     { label: "Frontend", value: "Frontend" },
     { label: "Backend", value: "Backend" },
     { label: "Python", value: "Python" },
-    { label: "Programming Language", value: "Programming Language" },
     { label: "Cyber Security", value: "Cyber Security" },
   ];
 
