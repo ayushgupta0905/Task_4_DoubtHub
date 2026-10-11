@@ -19,7 +19,7 @@ const VALID_DOMAINS = [
 
 const normalizeDomain = (domain) => {
     if (!domain || typeof domain !== "string") {
-        return "AI/ML";
+        return "Others";
     }
 
     const trimmed = domain.trim();
@@ -29,7 +29,7 @@ const normalizeDomain = (domain) => {
     }
 
     if (trimmed === "Programming Language") {
-        return "Python";
+        return "Programming Language";
     }
 
     if (VALID_DOMAINS.includes(trimmed)) {
