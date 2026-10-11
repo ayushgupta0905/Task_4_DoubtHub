@@ -235,6 +235,13 @@ export const predictDomain = async (queryText) => {
 
   if (!query) return "";
 
+  const normalizeDomainString = (val) => {
+    if (!val) return "General";
+    if (val === "ML/AI" || val === "ML") return "AI/ML";
+    if (val === "Programming Language") return "Python";
+    return val;
+  };
+
   // 1. Try direct ML service (or local dev proxy)
   try {
     const response = await fetch(getMlUrl("/predict"), {
@@ -249,7 +256,7 @@ export const predictDomain = async (queryText) => {
 
     if (response.ok) {
       const data = await response.json().catch(() => null);
-      if (data?.prediction) return data.prediction;
+      if (data?.prediction) return normalizeDomainString(data.prediction);
     }
   } catch {
     // fallback to backend proxy if direct fails
@@ -262,7 +269,7 @@ export const predictDomain = async (queryText) => {
         method: "POST",
         body: JSON.stringify({ query }),
       });
-      if (data?.prediction) return data.prediction;
+      if (data?.prediction) return normalizeDomainString(data.prediction);
     } catch {
       // silent fallback
     }
