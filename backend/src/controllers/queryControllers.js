@@ -29,7 +29,7 @@ const normalizeDomain = (domain) => {
     }
 
     if (trimmed === "Programming Language") {
-        return "Programming Language";
+        return "Python";
     }
 
     if (VALID_DOMAINS.includes(trimmed)) {
