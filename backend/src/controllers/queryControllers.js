@@ -19,7 +19,7 @@ const VALID_DOMAINS = [
 
 const normalizeDomain = (domain) => {
     if (!domain || typeof domain !== "string") {
-        return "Others";
+        return "Python";
     }
 
     const trimmed = domain.trim();
