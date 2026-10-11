@@ -10,10 +10,13 @@ from pydantic import BaseModel, Field
 from training.recommend import retrain
 
 
+
 app = FastAPI()
+
 
 model = joblib.load('model/domain_classifier.joblib')
 vectoriser = joblib.load('model/domain_classifier_vectorizer.joblib')
+
 
 
 class User_input(BaseModel):

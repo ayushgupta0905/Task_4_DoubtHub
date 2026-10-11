@@ -6,6 +6,39 @@ const {
     getRecommendations
 } = require("../services/mlService");
 
+const VALID_DOMAINS = [
+    "AI/ML",
+    "DSA",
+    "Python",
+    "Frontend",
+    "Backend",
+    "Cyber Security",
+    "ML",
+    "Web Development"
+];
+
+const normalizeDomain = (domain) => {
+    if (!domain || typeof domain !== "string") {
+        return "AI/ML";
+    }
+
+    const trimmed = domain.trim();
+
+    if (trimmed === "ML/AI" || trimmed === "ML") {
+        return "AI/ML";
+    }
+
+    if (trimmed === "Programming Language") {
+        return "Python";
+    }
+
+    if (VALID_DOMAINS.includes(trimmed)) {
+        return trimmed;
+    }
+
+    return "AI/ML";
+};
+
 
 // Create new query
 const createQuery = async (req, res) => {
@@ -22,14 +55,22 @@ const createQuery = async (req, res) => {
         }
 
         // Model 1 predicts the domain
-        const prediction = await getPrediction(
-            title + " " + description
-        );
+        let rawPrediction;
+        try {
+            rawPrediction = await getPrediction(
+                title + " " + description
+            );
+        } catch (mlErr) {
+            console.error("ML prediction error in createQuery:", mlErr);
+            rawPrediction = "AI/ML";
+        }
+
+        const domain = normalizeDomain(rawPrediction);
 
         const query = await Query.create({
             title,
             description,
-            domain: prediction,
+            domain,
             userId: req.user._id
         });
 
@@ -238,7 +279,8 @@ const predictDomain = async (req, res) => {
             });
         }
 
-        const prediction = await getPrediction(query);
+        const rawPrediction = await getPrediction(query);
+        const prediction = normalizeDomain(rawPrediction);
 
         res.status(200).json({
             prediction
