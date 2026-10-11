@@ -27,7 +27,8 @@ const querySchema = new mongoose.Schema(
                 "Backend",
                 "Cyber Security",
                 "ML",
-                "Web Development"
+                "Web Development",
+                "Programming Language"
             ]
         },
 
