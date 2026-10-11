@@ -19,7 +19,15 @@ const authMiddleware = async (req, res, next) => {
             process.env.JWT_SECRET
         );
 
-        const user = await User.findById(decoded.id).select("-password");
+        const userId = decoded.id || decoded.userId;
+
+        if (!userId) {
+            return res.status(401).json({
+                message: "Invalid token payload"
+            });
+        }
+
+        const user = await User.findById(userId).select("-password");
 
         if (!user) {
             return res.status(401).json({
@@ -30,6 +38,8 @@ const authMiddleware = async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
+        console.error("Auth error:", error.message);
+
         return res.status(401).json({
             message: "Invalid or expired token"
         });
