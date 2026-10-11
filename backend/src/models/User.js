@@ -8,7 +8,8 @@ const domain = [
     "DSA",
     "Python",
     "Cyber Security",
-    "Machine Learning"
+    "Machine Learning",
+    "Programming Language"
 ];
 
 // User Schema
