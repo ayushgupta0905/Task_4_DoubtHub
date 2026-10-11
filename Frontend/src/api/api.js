@@ -238,7 +238,7 @@ export const predictDomain = async (queryText) => {
   const normalizeDomainString = (val) => {
     if (!val) return "General";
     if (val === "ML/AI" || val === "ML") return "AI/ML";
-    if (val === "Programming Language") return "Python";
+    if (val === "Programming Language") return "Programming Language";
     return val;
   };
 
