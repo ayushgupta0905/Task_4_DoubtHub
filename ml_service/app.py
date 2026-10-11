@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from training.recommend import retrain
-from fastapi.middleware.cors import CORSMiddleware
+
 
 
 app = FastAPI()
@@ -26,7 +26,7 @@ app.add_middleware(
 
 model = joblib.load('model/domain_classifier.joblib')
 vectoriser = joblib.load('model/domain_classifier_vectorizer.joblib')
-vectoriser = joblib.load('model/domain_classifier_vectorizer.joblib')
+
 
 
 class User_input(BaseModel):
