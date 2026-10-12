@@ -1,14 +1,21 @@
-# Smart College Doubt Solving Platform
+# Smart College Doubt Solving Platform (CampusDoubt / DoubtHub)
 
 An AI/ML-powered Question & Answer community platform tailored for college students to post, discover, and resolve technical doubts efficiently.
+
+**Live links**
+- Frontend: https://campusdoubt.vercel.app
+- ML service (Swagger docs): https://task-4-doubthub.onrender.com/docs
+- Backend API: https://task-4-doubthub-6liq.onrender.com
+
+> The backend and ML service run on Render's free tier and sleep when idle. The first request after a pause can take 30–60 seconds.
 
 ---
 
 ## 📌 Project Overview
 
-In a typical college technical ecosystem, students frequently encounter repetitive technical doubts. Existing communication channels often make finding past answers difficult, and multi-domain questions get mixed together.
+In a typical college technical ecosystem, students frequently encounter repetitive technical doubts. Existing communication channels make finding past answers difficult, and multi-domain questions get mixed together.
 
-The **Smart College Doubt Solving Platform** integrates an intelligent ML layer onto a Stack Overflow-style Q&A web application. The ML service automatically categorizes questions by domain and topic, detects duplicate or similar questions prior to posting, and recommends relevant discussion threads.
+The platform adds an intelligent ML layer to a Stack Overflow-style Q&A web app. The ML service automatically classifies questions by domain and recommends similar questions from the same domain.
 
 ---
 
@@ -31,157 +38,207 @@ The **Smart College Doubt Solving Platform** integrates an intelligent ML layer 
 
 ---
 
-## 🎯 Key Modules & Task Distribution
+## 🎯 Key Features
 
-> **Suggested Work Split:** ML 40% | Frontend 30% | Backend 30%
+### 🤖 Machine Learning (FastAPI)
+* **Domain classification (Model 1):** predicts Backend, Cyber Security, DSA, Frontend, ML/AI or Programming Language from the question text.
+* **Similar-question recommendation (Model 2):** TF-IDF + KMeans clustering with cosine similarity, run within the predicted domain's dataset.
 
-### 🤖 Machine Learning Module (40%)
-* **Automatic Classification (15%):** Predicts broad domain and topic (e.g., Frontend, Backend, ML/AI, DSA, Database, DevOps) from question titles and descriptions.
-* **Similar Question Detection (15%):** Vectorizes question text to detect duplicate or highly similar questions before submission.
-* **Recommendations (10%):** Recommends related questions and topics based on text similarity and user activity.
+### ⚙️ Backend (Node.js / Express / MongoDB)
+* Signup and login with bcrypt password hashing and JWT authentication, with domain selection.
+* Questions: create (domain auto-assigned by the ML model), list, inbox by domain, my questions, resolve.
+* Answers: post, list, delete own, accept (question owner only).
+* Bookmarks, domains, user points and reputation.
+* Acts as the bridge between the frontend and the ML service.
 
-### ⚙️ Backend Module (30%)
-* **Authentication & Security:** Signup, login, password hashing, and protected route access.
-* **Question & Answer Pipeline:** Full CRUD operations for creating, reading, searching, and filtering doubts.
-* **Voting & Reputation Engine:** Upvote/downvote logic, marking accepted answers, and updating user reputation scores.
-* **ML Microservice Connection:** Handles HTTP requests and data flow between the main application and the ML service.
-
-### 💻 Frontend Module (30%)
-* **Q&A Dashboard:** Main home feed displaying latest/trending doubts with search and domain filtering.
-* **Smart Similarity UI:** Real-time pop-up displaying potential duplicate questions while the user drafts a post.
-* **Interactive Question Page:** Displays detailed question text, community answers, voting controls, and accepted solution indicators.
-* **User Profile & Activity:** Displays student reputation, history of asked questions, given answers, and achievements.
+### 💻 Frontend (React + Vite)
+* Home feed, questions list, categories, trending, search results.
+* Ask Question page with live domain prediction and "Recommend (ML Model 2)".
+* Question detail with answers, similar doubts, bookmarks, profile and my answers.
 
 ---
 
-## 🔄 System Architecture & Workflow
+## 🔄 System Architecture
 
-    [Student Frontend] ──> [Backend Server] ──> [ML Microservice]
-            │                     │                    │
-            │                     ▼                    ▼
-            │             [Database Store]    [ML Models / Inference]
-            │                     │
-            └─────────────────────┴──> [Community Answers & Upvotes]
+    [React Frontend (Vercel)] ──> [Express Backend (Render)] ──> [FastAPI ML Service (Render)]
+              │                           │
+              │                           ▼
+              │                   [MongoDB database]
+              │
+              └──────────────────────────────────────> [ML Service: /predict, /recommend]
 
-1. **Authentication:** Student signs up or logs into the portal.
-2. **Ask a Doubt:** Student inputs title, description, and optional tags.
-3. **ML Service Query:** Backend transmits draft text to the ML microservice.
-4. **Classification & Similarity:** ML predicts domain/topic and computes similarity scores against existing questions.
-5. **Duplicate Prevention:** If similarity crosses a threshold, existing solutions are suggested immediately.
-6. **Persistence & Community:** If new, the question is stored in the database for community members to answer, upvote, and mark accepted solutions.
+1. The student signs up or logs in and receives a JWT.
+2. While typing a question, the frontend calls the ML service `/predict` for a live domain label.
+3. On post, the backend calls the ML service, normalizes the domain, and stores the question.
+4. Similar questions are fetched from the ML service `/recommend`.
+5. Other students answer; the owner accepts an answer and marks the doubt resolved.
 
 ---
 
-## 🛠️ Proposed Tech Stack
+## 🛠️ Tech Stack
 
 | Component | Stack |
 | :--- | :--- |
-| **Frontend** | React / Next.js / Streamlit |
-| **Backend** | Node.js (Express) / Python (FastAPI/Flask) |
-| **ML Service** | Python (Scikit-Learn, NLTK/SpaCy, PyTorch/TF) |
-| **Database** | PostgreSQL / MongoDB / SQLite |
+| **Frontend** | React 19, Vite, React Router, lucide-react |
+| **Backend** | Node.js, Express 5, Mongoose, JWT, bcryptjs |
+| **ML Service** | Python, FastAPI, Uvicorn, scikit-learn, pandas, joblib |
+| **Database** | MongoDB |
+| **Hosting** | Vercel (frontend), Render (backend + ML) |
 | **Version Control** | Git & GitHub |
 
 ---
 
-## 🗄️ Database Schemas
+## 📁 Project Structure
 
-    User {
-      id: String
-      name: String
-      email: String
-      role: String
-      reputation: Integer
-      domains: String[]
-      createdAt: DateTime
-    }
-
-    Question {
-      id: String
-      title: String
-      description: String
-      authorId: String
-      domain: String
-      topic: String
-      tags: String[]
-      createdAt: DateTime
-    }
-
-    Answer {
-      id: String
-      questionId: String
-      authorId: String
-      content: String
-      upvotes: Integer
-      downvotes: Integer
-      isAccepted: Boolean
-      createdAt: DateTime
-    }
+```text
+Task_4_DoubtHub/
+│
+├── Frontend/                          # 💻 React + Vite app (deployed on Vercel)
+│   ├── public/                        # favicon.svg, icons.svg
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── api.js                 # All backend + ML API calls
+│   │   ├── assets/                    # Images (hero, student photo, backgrounds)
+│   │   ├── components/
+│   │   │   └── Navbar.jsx
+│   │   ├── pages/
+│   │   │   ├── home.jsx
+│   │   │   ├── login.jsx
+│   │   │   ├── signup.jsx
+│   │   │   ├── question.jsx           # Questions list
+│   │   │   ├── questiondetail.jsx     # Question + answers
+│   │   │   ├── askquestion.jsx        # Ask page (live ML prediction)
+│   │   │   ├── similarquestion.jsx    # ML similar doubts
+│   │   │   ├── categories.jsx
+│   │   │   ├── trending.jsx
+│   │   │   ├── bookmarks.jsx
+│   │   │   ├── myanswer.jsx
+│   │   │   ├── profile.jsx
+│   │   │   ├── searchresults.jsx
+│   │   │   ├── categories.css
+│   │   │   └── similarquestion.css
+│   │   ├── App.jsx                    # Routes
+│   │   ├── main.jsx
+│   │   └── index.css
+│   ├── index.html
+│   ├── vercel.json                    # SPA rewrite for React Router
+│   ├── vite.config.js                 # Dev-only /ml proxy
+│   ├── eslint.config.js
+│   └── package.json
+│
+├── backend/                           # ⚙️ Express API (deployed on Render)
+│   ├── src/
+│   │   ├── config/
+│   │   │   └── db.js                  # MongoDB connection
+│   │   ├── controllers/
+│   │   │   ├── authController.js
+│   │   │   ├── queryControllers.js
+│   │   │   ├── answerController.js
+│   │   │   ├── bookmarkController.js
+│   │   │   └── domainControllers.js
+│   │   ├── middleware/
+│   │   │   └── authMiddleware.js      # JWT verification
+│   │   ├── models/
+│   │   │   ├── User.js
+│   │   │   ├── Query.js
+│   │   │   ├── Answer.js
+│   │   │   ├── Bookmark.js
+│   │   │   └── Domain.js
+│   │   ├── routes/
+│   │   │   ├── authRoutes.js
+│   │   │   ├── queryRoutes.js
+│   │   │   ├── answerRoutes.js
+│   │   │   ├── bookmarkRoutes.js
+│   │   │   └── domainroutes.js
+│   │   ├── services/
+│   │   │   ├── mlService.js
+│   │   │   ├── model1Service.js       # Calls ML /predict
+│   │   │   └── model2Service.js       # Calls ML /recommend
+│   │   └── utils/
+│   │       └── generateToken.js
+│   ├── app.js                         # Express app, CORS, routes
+│   ├── server.js                      # Entry point
+│   └── package.json
+│
+├── ml_service/                        # 🤖 FastAPI ML microservice (deployed on Render)
+│   ├── model/
+│   │   ├── domain_classifier.joblib
+│   │   └── domain_classifier_vectorizer.joblib
+│   ├── training/
+│   │   ├── data/                      # Per-domain Q&A CSVs and classifier datasets
+│   │   ├── Domain_classifier.ipynb
+│   │   ├── Text_Preprocessing.ipynb
+│   │   └── recommend.py               # Similar-question logic (TF-IDF + KMeans)
+│   ├── app.py                         # API: /, /predict, /recommend (with CORS)
+│   └── requirements.txt
+│
+├── .gitignore
+└── README.md
+```
 
 ---
 
-## 🗺️ Development Roadmap
+## 🚀 Running Locally
 
-- [ ] **Phase 1:** Project setup, database architecture, and backend scaffold.
-- [ ] **Phase 2:** User authentication and profile models.
-- [ ] **Phase 3:** Q&A CRUD feature development.
-- [ ] **Phase 4:** Voting, accepted answer logic, and search filters.
-- [ ] **Phase 5:** Responsive Frontend UI & dashboard design.
-- [ ] **Phase 6:** ML service infrastructure setup.
-- [ ] **Phase 7:** Question domain & topic classification model training.
-- [ ] **Phase 8:** Similar-question detection algorithm implementation.
-- [ ] **Phase 9:** Integration between Backend and ML service endpoints.
-- [ ] **Phase 10:** Recommendation engine, reputation scoring, and polish.
-- [ ] **Phase 11:** Integration testing, deployment, and final presentation.
+**1. ML service**
+```bash
+cd ml_service
+pip install -r requirements.txt
+uvicorn app:app --reload --port 8001
+```
+
+**2. Backend**
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+**3. Frontend**
+```bash
+cd Frontend
+npm install
+npm run dev
+```
+
+### Environment variables
+
+| Where | Variable | Purpose |
+| :--- | :--- | :--- |
+| Backend | `MONGO_URI` | MongoDB connection string |
+| Backend | `JWT_SECRET` | Secret used to sign tokens |
+| Backend | `JWT_EXPIRES_IN` | Token lifetime (default `7d`) |
+| Backend | `PORT` | Server port (default `8000`) |
+| Frontend | `VITE_API_URL` | Backend base URL, e.g. `https://<backend>/api` |
+| Frontend | `VITE_ML_API_URL` | ML service URL |
+
+---
+
+## 🔌 API Overview
+
+Base path: `/api`
+
+| Area | Endpoints |
+| :--- | :--- |
+| Auth | `POST /auth/signup`, `POST /auth/login`, `GET /auth/profile` |
+| Queries | `GET/POST /queries`, `GET /queries/inbox`, `GET /queries/my`, `GET /queries/:id`, `GET /queries/:id/similar`, `PATCH /queries/:id/resolve`, `POST /queries/predict`, `POST /queries/recommend` |
+| Answers | `POST/GET /answers/:queryId`, `GET /answers/my`, `DELETE /answers/:id`, `PATCH /answers/:id/accept` |
+| Bookmarks | `GET /bookmarks`, `POST/DELETE /bookmarks/:queryId` |
+| Domains | `GET /domains`, `GET /domains/:name` |
+
+ML service: `POST /predict` and `POST /recommend`, both with body `{ "Query": "..." }`.
+
+---
+
+## ☁️ Deployment Notes
+
+* **Vercel (frontend):** Root Directory `Frontend`, Framework Vite, `vercel.json` inside `Frontend/`.
+* **Render (ML):** Root Directory `ml_service`, Build `pip install -r requirements.txt`, Start `uvicorn app:app --host 0.0.0.0 --port $PORT`.
+* **Render (backend):** Root Directory `backend`, Build `npm install`, Start `npm start`.
+* **CORS:** the ML service allows `https://campusdoubt.vercel.app` and `http://localhost:5173`. Add any new frontend domain to `allow_origins` in `ml_service/app.py`.
 
 ---
 
 ## 📜 License
 
 This project is developed by team **Gradient Descenders** for the final probation task evaluation.
-
-
-## Expected File Structure
-
-```text
-smart-college-doubt-platform/
-│
-├── frontend/                   # 💻 Frontend UI (React / Next.js)
-│   ├── public/                 # Static assets (images, icons)
-│   ├── src/
-│   │   ├── components/         # Reusable UI parts (Navbar, QuestionCard, SimilarityPopup)
-│   │   ├── pages/              # Main views (Home, AskDoubt, Profile, QuestionDetail)
-│   │   ├── services/           # API calls to the Backend
-│   │   ├── styles/             # CSS / Tailwind files
-│   │   └── App.js              # Main React application entry
-│   ├── package.json            # Frontend dependencies
-│   └── .env                    # Frontend environment variables
-│
-├── backend/                    # ⚙️ Main Application Backend (Node.js / Express)
-│   ├── src/
-│   │   ├── controllers/        # Business logic (UserCtrl, QuestionCtrl, AnswerCtrl)
-│   │   ├── models/             # Database schemas (User, Question, Answer)
-│   │   ├── routes/             # API endpoints (/api/auth, /api/questions)
-│   │   ├── middleware/         # Auth guards (JWT verification)
-│   │   └── server.js           # Main backend entry point
-│   ├── package.json            # Backend dependencies
-│   └── .env                    # DB connection strings & JWT secrets
-│
-├── ml_service/                 # 🤖 Machine Learning Microservice (Python / FastAPI or Flask)
-│   ├── api/
-│   │   └── app.py              # ML API endpoints (/predict-domain, /check-similarity)
-│   ├── models/
-│   │   ├── similarity_model.pkl   # Your exported similarity model
-│   │   └── classifier_model.pkl   # Your exported domain classification model
-│   ├── training/
-│   │   ├── train_similarity.py    # Script used to train the similarity model
-│   │   └── train_classifier.py    # Script used to train the classification model
-│   ├── data/
-│   │   └── raw_questions.csv      # Dataset used for training (add to .gitignore)
-│   └── requirements.txt        # Python dependencies (scikit-learn, pandas, flask)
-│
-├── .gitignore                  # Ignore node_modules, .env, and large datasets
-└── README.md                   # The project overview documentation
-```
-
-## ML model deployed link : https://task-4-doubthub.onrender.com/docs
