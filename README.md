@@ -3,6 +3,7 @@
 An AI/ML-powered Question & Answer community platform tailored for college students to post, discover, and resolve technical doubts efficiently.
 
 **Live links**
+- PPT : https://docs.google.com/presentation/d/1NwJyWRY9viQWIBoVoKtnyF9KiUNnO2ds/edit?usp=sharing&ouid=102504583905016874214&rtpof=true&sd=true
 - Frontend: https://campusdoubt.vercel.app
 - ML service (Swagger docs): https://task-4-doubthub.onrender.com/docs
 - Backend API: https://task-4-doubthub-6liq.onrender.com
