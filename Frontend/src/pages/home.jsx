@@ -133,7 +133,7 @@ function Home() {
         </div>
 
         <div>
-          <h2>5K+</h2>
+          <h2>10+</h2>
           <p>Active Students</p>
         </div>
 
